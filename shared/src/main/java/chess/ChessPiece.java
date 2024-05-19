@@ -77,7 +77,57 @@ public class ChessPiece {
             case QUEEN:
                 throw new RuntimeException("Not implemented");
             case PAWN:
-                throw new RuntimeException("Not implemented");
+                // Pieces pawns can be promoted to
+                PieceType[] promoPieces = {PieceType.QUEEN, PieceType.KNIGHT, PieceType.ROOK, PieceType.BISHOP};
+                // Loops through the ways pawns can travel without capturing
+                int colorModifier = myColor==ChessGame.TeamColor.WHITE ? 1 : -1;
+                for (int vdir = 1; vdir <= 2; vdir++) {
+                    ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir*colorModifier, myPosition.getColumn());
+                    // If attempting to move two spaces, checks if legal
+                    if (vdir == 2) {
+                        if (currPosition.getRow()+.5*colorModifier != 4.5) { continue; }
+                        ChessPosition jumpedPosition = new ChessPosition(currPosition.getRow()-colorModifier, currPosition.getColumn());
+                        ChessPiece jumpedInhabitant = board.getPiece(jumpedPosition);
+                        if (jumpedInhabitant != null) { continue; }
+                    }
+                    // Checks if we have run off the board
+                    if (currPosition.isOffBoard()) { continue; }
+                    // Checks if we are sitting on a piece (friendly or unfriendly)
+                    ChessPiece localInhabitant = board.getPiece(currPosition);
+                    if (localInhabitant != null) { continue; }
+                    // Adds the current position to list, with all possible promotions
+                    if (currPosition.getRow()-3.5*colorModifier==4.5) {
+                        for (PieceType promoPiece : promoPieces) {
+                            ChessMove newMove = new ChessMove(myPosition, currPosition, promoPiece);
+                            validMoves.add(newMove);
+                        }
+                    } else {
+                        ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+                        validMoves.add(newMove);
+                    }
+                }
+                // Loops through the ways pawns can capture
+                // FIXME: Does not yet account for en passant!
+                for (int hdir = -1; hdir <= 1; hdir+=2) {
+                    ChessPosition currPosition = new ChessPosition(myPosition.getRow()+colorModifier, myPosition.getColumn()+hdir);
+                    // Checks if we have run off the board
+                    if (currPosition.isOffBoard()) { continue; }
+                    // Checks if we are sitting on a piece (friendly or unfriendly)
+                    ChessPiece localInhabitant = board.getPiece(currPosition);
+                    if (localInhabitant == null) { continue; }
+                    if (localInhabitant.getTeamColor() == myColor) { continue; }
+                    // Adds the current position to list, with all possible promotions
+                    if (currPosition.getRow()-3.5*colorModifier==4.5) {
+                        for (PieceType promoPiece : promoPieces) {
+                            ChessMove newMove = new ChessMove(myPosition, currPosition, promoPiece);
+                            validMoves.add(newMove);
+                        }
+                    } else {
+                        ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+                        validMoves.add(newMove);
+                    }
+                }
+                break;
             case ROOK:
                 throw new RuntimeException("Not implemented");
             case BISHOP:

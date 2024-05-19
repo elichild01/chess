@@ -19,19 +19,6 @@ public class ChessPiece {
         this.pType = type;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ChessPiece that = (ChessPiece) o;
-        return color == that.color && pType == that.pType;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(color, pType);
-    }
-
     /**
      * The various different chess piece options
      */
@@ -67,6 +54,7 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         Collection<ChessMove> validMoves = new ArrayList<>();
+        ChessGame.TeamColor myColor = board.getPiece(myPosition).getTeamColor();
         switch (this.pType) {
             case KING:
                 throw new RuntimeException("Not implemented");
@@ -80,23 +68,47 @@ public class ChessPiece {
                 // Loop through the four directions Bishops can travel
                 for (int hdir = -1; hdir <= 1; hdir+=2) {
                     for (int vdir = -1; vdir <= 1; vdir+=2) {
-                        int currRow = myPosition.getRow() + vdir;
-                        int currCol = myPosition.getColumn() + hdir;
-                        while (currRow <= 8 && currRow >= 1 && currCol <= 8 && currCol >= 1) {
-                            // Adds the current position to list if we haven't hit a wall yet
-                            ChessPosition newPosition = new ChessPosition(currRow, currCol);
-                            ChessMove newMove = new ChessMove(myPosition, newPosition, null);
+                        ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir, myPosition.getColumn()+hdir);
+                        boolean stopped = false;
+                        while (!stopped) {
+                            // Checks if we have run off the board
+                            if (currPosition.isOffBoard()) { break; }
+                            // Checks if we are sitting on a piece (friendly or unfriendly)
+                            ChessPiece localInhabitant = board.getPiece(currPosition);
+                            if (localInhabitant != null) {
+                                if (localInhabitant.getTeamColor() == myColor) { break; }
+                                else { stopped = true; }
+                            }
+                            // Adds the current position to list
+                            ChessMove newMove = new ChessMove(myPosition, currPosition, null);
                             validMoves.add(newMove);
-
                             // Increments the position being checked
-                            currRow += vdir;
-                            currCol += hdir;
+                            currPosition = new ChessPosition(currPosition.getRow()+vdir, currPosition.getColumn()+hdir);
                         }
                     }
                 }
+                break;
             case KNIGHT:
                 throw new RuntimeException("Not implemented");
         }
         return validMoves;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChessPiece that = (ChessPiece) o;
+        return color == that.color && pType == that.pType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(color, pType);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s %s", this.color, this.pType);
     }
 }

@@ -33,6 +33,14 @@ public class ChessPosition {
         return this.col;
     }
 
+    /**
+     * Checks if the current position is off the board
+     * @return boolean isOffBoard
+     */
+    public boolean isOffBoard() {
+        return this.row > 8 || this.row < 1 || this.col > 8 || this.col < 1;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -44,5 +52,10 @@ public class ChessPosition {
     @Override
     public int hashCode() {
         return Objects.hash(row, col);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("row %d col %d", this.row, this.col);
     }
 }

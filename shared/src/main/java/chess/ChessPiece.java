@@ -105,7 +105,23 @@ public class ChessPiece {
                 }
                 break;
             case KNIGHT:
-                throw new RuntimeException("Not implemented");
+                // Loop through the eight directions Knights can travel
+                for (int hdir = -2; hdir <= 2; hdir++) {
+                    // Skips the not-moving case
+                    if (hdir==0) { continue; }
+                    for (int vdir = -3+Math.abs(hdir); vdir <= 3-Math.abs(hdir); vdir+=2*(3-Math.abs(hdir))) {
+                        ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir, myPosition.getColumn()+hdir);
+                        // Checks if we have run off the board
+                        if (currPosition.isOffBoard()) { continue; }
+                        // Checks if we are sitting on a piece (friendly or unfriendly)
+                        ChessPiece localInhabitant = board.getPiece(currPosition);
+                        if (localInhabitant != null && localInhabitant.getTeamColor() == myColor) { continue; }
+                        // Adds the current position to list
+                        ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+                        validMoves.add(newMove);
+                    }
+                }
+                break;
         }
         return validMoves;
     }

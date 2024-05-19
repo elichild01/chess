@@ -66,7 +66,7 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        Collection<ChessMove> validMoves = new ArrayList<ChessMove>();
+        Collection<ChessMove> validMoves = new ArrayList<>();
         switch (this.pType) {
             case KING:
                 throw new RuntimeException("Not implemented");
@@ -95,7 +95,7 @@ public class ChessPiece {
                     }
                 }
             case KNIGHT:
-                ;
+                throw new RuntimeException("Not implemented");
         }
         return validMoves;
     }

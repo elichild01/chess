@@ -153,7 +153,47 @@ public class ChessPiece {
                 }
                 break;
             case ROOK:
-                throw new RuntimeException("Not implemented");
+                // Horizontal movement
+                for (int hdir = -1; hdir <= 1; hdir+=2) {
+                    ChessPosition currPosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn()+hdir);
+                    boolean stopped = false;
+                    while (!stopped) {
+                        // Checks if we have run off the board
+                        if (currPosition.isOffBoard()) { break; }
+                        // Checks if we are sitting on a piece (friendly or unfriendly)
+                        ChessPiece localInhabitant = board.getPiece(currPosition);
+                        if (localInhabitant != null) {
+                            if (localInhabitant.getTeamColor() == myColor) { break; }
+                            else { stopped = true; }
+                        }
+                        // Adds the current position to list
+                        ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+                        validMoves.add(newMove);
+                        // Increments the position being checked
+                        currPosition = new ChessPosition(currPosition.getRow(), currPosition.getColumn()+hdir);
+                    }
+                }
+                // Vertical movement
+                for (int vdir = -1; vdir <= 1; vdir+=2) {
+                    ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir, myPosition.getColumn());
+                    boolean stopped = false;
+                    while (!stopped) {
+                        // Checks if we have run off the board
+                        if (currPosition.isOffBoard()) { break; }
+                        // Checks if we are sitting on a piece (friendly or unfriendly)
+                        ChessPiece localInhabitant = board.getPiece(currPosition);
+                        if (localInhabitant != null) {
+                            if (localInhabitant.getTeamColor() == myColor) { break; }
+                            else { stopped = true; }
+                        }
+                        // Adds the current position to list
+                        ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+                        validMoves.add(newMove);
+                        // Increments the position being checked
+                        currPosition = new ChessPosition(currPosition.getRow()+vdir, currPosition.getColumn());
+                    }
+                }
+                break;
             case BISHOP:
                 // Loop through the four directions Bishops can travel
                 for (int hdir = -1; hdir <= 1; hdir+=2) {

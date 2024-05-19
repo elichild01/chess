@@ -57,7 +57,23 @@ public class ChessPiece {
         ChessGame.TeamColor myColor = board.getPiece(myPosition).getTeamColor();
         switch (this.pType) {
             case KING:
-                throw new RuntimeException("Not implemented");
+                // Loop through the eight directions Kings can travel
+                for (int hdir = -1; hdir <= 1; hdir++) {
+                    for (int vdir = -1; vdir <= 1; vdir++) {
+                        // Skips the not-moving case
+                        if (vdir == 0 && hdir == 0) { continue; }
+                        ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir, myPosition.getColumn()+hdir);
+                        // Checks if we have run off the board
+                        if (currPosition.isOffBoard()) { continue; }
+                        // Checks if we are sitting on a piece (friendly or unfriendly)
+                        ChessPiece localInhabitant = board.getPiece(currPosition);
+                        if (localInhabitant != null && localInhabitant.getTeamColor() == myColor) { continue; }
+                        // Adds the current position to list
+                        ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+                        validMoves.add(newMove);
+                    }
+                }
+                break;
             case QUEEN:
                 throw new RuntimeException("Not implemented");
             case PAWN:

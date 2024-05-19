@@ -75,7 +75,31 @@ public class ChessPiece {
                 }
                 break;
             case QUEEN:
-                throw new RuntimeException("Not implemented");
+                // Loop through the eight directions Queens can travel
+                for (int hdir = -1; hdir <= 1; hdir+=1) {
+                    for (int vdir = -1; vdir <= 1; vdir+=1) {
+                        // Skips the not-moving case
+                        if (vdir == 0 && hdir == 0) { continue; }
+                        ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir, myPosition.getColumn()+hdir);
+                        boolean stopped = false;
+                        while (!stopped) {
+                            // Checks if we have run off the board
+                            if (currPosition.isOffBoard()) { break; }
+                            // Checks if we are sitting on a piece (friendly or unfriendly)
+                            ChessPiece localInhabitant = board.getPiece(currPosition);
+                            if (localInhabitant != null) {
+                                if (localInhabitant.getTeamColor() == myColor) { break; }
+                                else { stopped = true; }
+                            }
+                            // Adds the current position to list
+                            ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+                            validMoves.add(newMove);
+                            // Increments the position being checked
+                            currPosition = new ChessPosition(currPosition.getRow()+vdir, currPosition.getColumn()+hdir);
+                        }
+                    }
+                }
+                break;
             case PAWN:
                 // Pieces pawns can be promoted to
                 PieceType[] promoPieces = {PieceType.QUEEN, PieceType.KNIGHT, PieceType.ROOK, PieceType.BISHOP};

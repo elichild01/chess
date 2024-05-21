@@ -40,6 +40,38 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        throw new RuntimeException("Not implemented");
+        // wipe existing pieces
+        this.pieces = new ChessPiece[8][8];
+        // add pawns
+        int[] pawnRows = {2, 7};
+        for (int row : pawnRows) {
+            for (int col = 1; col <= 8; col++) {
+                ChessGame.TeamColor color = row==2 ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = new ChessPiece(color, ChessPiece.PieceType.PAWN);
+                addPiece(position, piece);
+            }
+        }
+        // add all other pieces
+        for (int row = 1; row <= 8; row += 7) {
+            for (int col = 1; col <= 8; col++) {
+                ChessGame.TeamColor color = row==1 ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece.PieceType type = getPieceType(col, color);
+                ChessPiece piece = new ChessPiece(color, type);
+                addPiece(position, piece);
+            }
+        }
+    }
+
+    private static ChessPiece.PieceType getPieceType(int col, ChessGame.TeamColor color) {
+        return switch (col) {
+            case 1, 8 -> ChessPiece.PieceType.ROOK;
+            case 2, 7 -> ChessPiece.PieceType.KNIGHT;
+            case 3, 6 -> ChessPiece.PieceType.BISHOP;
+            case 4 -> color == ChessGame.TeamColor.WHITE ? ChessPiece.PieceType.QUEEN : ChessPiece.PieceType.KING;
+            case 5 -> color == ChessGame.TeamColor.BLACK ? ChessPiece.PieceType.QUEEN : ChessPiece.PieceType.KING;
+            default -> throw new IndexOutOfBoundsException();
+        };
     }
 }

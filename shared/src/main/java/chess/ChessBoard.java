@@ -90,4 +90,33 @@ public class ChessBoard {
     public int hashCode() {
         return Arrays.deepHashCode(pieces);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder boardString = new StringBuilder();
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = getPiece(pos);
+                String pieceStr;
+                if (piece==null) { pieceStr = " "; }
+                else {
+                    pieceStr = switch (piece.getPieceType()) {
+                        case KING -> "k";
+                        case QUEEN -> "q";
+                        case ROOK -> "r";
+                        case BISHOP -> "b";
+                        case KNIGHT -> "n";
+                        case PAWN -> "p";
+                    };
+                    if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+                        pieceStr = pieceStr.toUpperCase();
+                    }
+                }
+                boardString.append(String.format("|%s", pieceStr));
+            }
+            boardString.append("|\n");
+        }
+        return boardString.toString();
+    }
 }

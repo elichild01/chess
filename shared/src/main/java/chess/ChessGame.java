@@ -103,6 +103,7 @@ public class ChessGame {
      */
     public boolean isInCheck(TeamColor teamColor) {
         ChessPosition kingPosition = findKingPosition(teamColor);
+        if (kingPosition == null) { return false; }
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition enemyPosition = new ChessPosition(row, col);
@@ -121,7 +122,17 @@ public class ChessGame {
      * Finds the King of a given side
      */
     private ChessPosition findKingPosition(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition currPos = new ChessPosition(row, col);
+                ChessPiece currPiece = board.getPiece(currPos);
+                if (currPiece == null) { continue; }
+                if (currPiece.getTeamColor() == teamColor && currPiece.getPieceType() == ChessPiece.PieceType.KING) {
+                    return currPos;
+                }
+            }
+        }
+        return null;
     }
 
     /**

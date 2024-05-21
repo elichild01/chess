@@ -18,7 +18,14 @@ public class ChessBoard {
     }
 
     public ChessBoard(ChessBoard board) {
-        this.pieces = board.pieces;
+        this.pieces = new ChessPiece[8][8];
+        for (int i = 0; i <= 7; i++) {
+            for (int j = 0; j <= 7; j++) {
+                if (board.pieces[i][j] != null) {
+                    this.pieces[i][j] = new ChessPiece(board.pieces[i][j]);
+                }
+            }
+        }
     }
 
     /**

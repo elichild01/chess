@@ -62,7 +62,7 @@ public class ChessMove {
         if (this.promotionPiece != null) {
             return String.format("%s to %s, promoting to %s", this.startPosition, this.endPosition, this.promotionPiece);
         } else{
-            return String.format("%s to %s", this.startPosition, this.endPosition);
+            return String.format("%s->%s", this.startPosition, this.endPosition);
         }
     }
 }

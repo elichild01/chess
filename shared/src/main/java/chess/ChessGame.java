@@ -11,10 +11,13 @@ import java.util.Collection;
  */
 public class ChessGame {
     private ChessBoard board;
+    private ChessBoard tempBoard;
     private TeamColor teamTurn;
 
     public ChessGame() {
-
+        board = new ChessBoard();
+        board.resetBoard();
+        teamTurn = TeamColor.WHITE;
     }
 
     /**
@@ -70,15 +73,15 @@ public class ChessGame {
      * @return valid whether the move is valid
      */
     private boolean isValidMove(ChessMove move) {
-        ChessBoard hypotheticalBoard = new ChessBoard(board);
+        tempBoard = new ChessBoard(board);
         ChessPosition startPosition = move.getStartPosition();
-        ChessPiece piece = board.getPiece(startPosition);
+        ChessPiece piece = tempBoard.getPiece(startPosition);
         if (piece==null) { return false; }
-        Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
+        Collection<ChessMove> possibleMoves = piece.pieceMoves(tempBoard, startPosition);
         for (ChessMove possMove : possibleMoves) {
             if (possMove.equals(move)) {
-                hypotheticalBoard.addPiece(move.getEndPosition(), piece);
-                hypotheticalBoard.addPiece(startPosition, null);
+                tempBoard.addPiece(move.getEndPosition(), piece);
+                tempBoard.addPiece(startPosition, null);
                 return !isInCheck(this.teamTurn);
             }
         }
@@ -96,7 +99,7 @@ public class ChessGame {
     }
 
     /**
-     * Determines if the given team is in check
+     * Determines if the given team is in check. NOTE: Uses only tempBoard.
      *
      * @param teamColor which team to check for check
      * @return True if the specified team is in check
@@ -107,9 +110,9 @@ public class ChessGame {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition enemyPosition = new ChessPosition(row, col);
-                ChessPiece enemyPiece = board.getPiece(enemyPosition);
+                ChessPiece enemyPiece = tempBoard.getPiece(enemyPosition);
                 if (enemyPiece == null || enemyPiece.getTeamColor() == teamColor) { continue; }
-                Collection<ChessMove> threatMoves = enemyPiece.pieceMoves(board, enemyPosition);
+                Collection<ChessMove> threatMoves = enemyPiece.pieceMoves(tempBoard, enemyPosition);
                 for (ChessMove threat : threatMoves) {
                     if (threat.getEndPosition().equals(kingPosition)) { return true; }
                 }
@@ -119,13 +122,13 @@ public class ChessGame {
     }
 
     /**
-     * Finds the King of a given side
+     * Finds the King of a given side. NOTE: Uses tempBoard.
      */
     private ChessPosition findKingPosition(TeamColor teamColor) {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition currPos = new ChessPosition(row, col);
-                ChessPiece currPiece = board.getPiece(currPos);
+                ChessPiece currPiece = tempBoard.getPiece(currPos);
                 if (currPiece == null) { continue; }
                 if (currPiece.getTeamColor() == teamColor && currPiece.getPieceType() == ChessPiece.PieceType.KING) {
                     return currPos;

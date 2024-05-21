@@ -11,12 +11,17 @@ import java.util.Objects;
  * signature of the existing methods.
  */
 public class ChessPiece {
-    private ChessGame.TeamColor color;
+    private final ChessGame.TeamColor color;
     private ChessPiece.PieceType pType;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.color = pieceColor;
         this.pType = type;
+    }
+
+    public ChessPiece(ChessPiece oldPiece) {
+        this.color = oldPiece.getTeamColor();
+        this.pType = oldPiece.getPieceType();
     }
 
     /**

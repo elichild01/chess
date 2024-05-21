@@ -60,20 +60,20 @@ public class ChessBoard {
             for (int col = 1; col <= 8; col++) {
                 ChessGame.TeamColor color = row==1 ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
                 ChessPosition position = new ChessPosition(row, col);
-                ChessPiece.PieceType type = getPieceType(col, color);
+                ChessPiece.PieceType type = getPieceType(col);
                 ChessPiece piece = new ChessPiece(color, type);
                 addPiece(position, piece);
             }
         }
     }
 
-    private static ChessPiece.PieceType getPieceType(int col, ChessGame.TeamColor color) {
+    private static ChessPiece.PieceType getPieceType(int col) {
         return switch (col) {
             case 1, 8 -> ChessPiece.PieceType.ROOK;
             case 2, 7 -> ChessPiece.PieceType.KNIGHT;
             case 3, 6 -> ChessPiece.PieceType.BISHOP;
-            case 4 -> color == ChessGame.TeamColor.WHITE ? ChessPiece.PieceType.QUEEN : ChessPiece.PieceType.KING;
-            case 5 -> color == ChessGame.TeamColor.BLACK ? ChessPiece.PieceType.QUEEN : ChessPiece.PieceType.KING;
+            case 4 -> ChessPiece.PieceType.QUEEN;
+            case 5 -> ChessPiece.PieceType.KING;
             default -> throw new IndexOutOfBoundsException();
         };
     }

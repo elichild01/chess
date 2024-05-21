@@ -102,6 +102,25 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
+        ChessPosition kingPosition = findKingPosition(teamColor);
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition enemyPosition = new ChessPosition(row, col);
+                ChessPiece enemyPiece = board.getPiece(enemyPosition);
+                if (enemyPiece == null || enemyPiece.getTeamColor() == teamColor) { continue; }
+                Collection<ChessMove> threatMoves = enemyPiece.pieceMoves(board, enemyPosition);
+                for (ChessMove threat : threatMoves) {
+                    if (threat.getEndPosition().equals(kingPosition)) { return true; }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Finds the King of a given side
+     */
+    private ChessPosition findKingPosition(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
     }
 

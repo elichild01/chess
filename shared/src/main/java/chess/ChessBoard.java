@@ -17,6 +17,10 @@ public class ChessBoard {
         this.pieces = new ChessPiece[8][8];
     }
 
+    public ChessBoard(ChessBoard board) {
+        this.pieces = board.pieces;
+    }
+
     /**
      * Adds a chess piece to the chessboard
      *

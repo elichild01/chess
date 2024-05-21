@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -9,6 +10,8 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessGame {
+    private ChessBoard board;
+    private TeamColor teamTurn;
 
     public ChessGame() {
 
@@ -46,13 +49,46 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = board.getPiece(startPosition);
+        if (piece == null) { return null; }
+
+        Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
+
+        Collection<ChessMove> legalMoves = new ArrayList<>();
+        for (ChessMove move : possibleMoves) {
+            if (isValidMove(move)) {
+                legalMoves.add(move);
+            }
+        }
+        return legalMoves;
+    }
+
+    /**
+     * Checks if a given move is valid
+     *
+     * @param move the move to check if valid
+     * @return valid whether the move is valid
+     */
+    private boolean isValidMove(ChessMove move) {
+        ChessBoard hypotheticalBoard = new ChessBoard(board);
+        ChessPosition startPosition = move.getStartPosition();
+        ChessPiece piece = board.getPiece(startPosition);
+        if (piece==null) { return false; }
+        Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
+        for (ChessMove possMove : possibleMoves) {
+            if (possMove.equals(move)) {
+                hypotheticalBoard.addPiece(move.getEndPosition(), piece);
+                hypotheticalBoard.addPiece(startPosition, null);
+                return !isInCheck(this.teamTurn);
+            }
+        }
+        return false;
     }
 
     /**
      * Makes a move in a chess game
      *
-     * @param move chess move to preform
+     * @param move chess move to perform
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
@@ -96,7 +132,7 @@ public class ChessGame {
      * @param board the new board to use
      */
     public void setBoard(ChessBoard board) {
-        throw new RuntimeException("Not implemented");
+        this.board = board;
     }
 
     /**

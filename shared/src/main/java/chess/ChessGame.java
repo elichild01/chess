@@ -77,6 +77,7 @@ public class ChessGame {
         ChessPosition startPosition = move.getStartPosition();
         ChessPiece piece = tempBoard.getPiece(startPosition);
         if (piece==null) { return false; }
+        if (piece.getTeamColor() != teamTurn) { return false; }
         Collection<ChessMove> possibleMoves = piece.pieceMoves(tempBoard, startPosition);
         for (ChessMove possMove : possibleMoves) {
             if (possMove.equals(move)) {

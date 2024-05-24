@@ -11,7 +11,6 @@ import java.util.Collection;
  */
 public class ChessGame {
     private ChessBoard board;
-    private ChessBoard tempBoard;
     private TeamColor teamTurn;
 
     public ChessGame() {
@@ -73,17 +72,19 @@ public class ChessGame {
      * @return valid whether the move is valid
      */
     private boolean isValidMove(ChessMove move) {
-        tempBoard = new ChessBoard(board);
+        ChessBoard tempBoard = new ChessBoard(board);
         ChessPosition startPosition = move.getStartPosition();
-        ChessPiece piece = tempBoard.getPiece(startPosition);
+        ChessPiece piece = board.getPiece(startPosition);
         if (piece==null) { return false; }
-        if (piece.getTeamColor() != teamTurn) { return false; }
-        Collection<ChessMove> possibleMoves = piece.pieceMoves(tempBoard, startPosition);
+//        if (piece.getTeamColor() != teamTurn) { return false; }
+        Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
         for (ChessMove possMove : possibleMoves) {
             if (possMove.equals(move)) {
-                tempBoard.addPiece(move.getEndPosition(), piece);
-                tempBoard.addPiece(startPosition, null);
-                return !isInCheck(piece.getTeamColor());
+                board.addPiece(move.getEndPosition(), piece);
+                board.addPiece(startPosition, null);
+                boolean inCheck = isInCheck(piece.getTeamColor());
+                this.board = new ChessBoard(tempBoard);
+                return !inCheck;
             }
         }
         return false;
@@ -121,9 +122,9 @@ public class ChessGame {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition enemyPosition = new ChessPosition(row, col);
-                ChessPiece enemyPiece = tempBoard.getPiece(enemyPosition);
+                ChessPiece enemyPiece = board.getPiece(enemyPosition);
                 if (enemyPiece == null || enemyPiece.getTeamColor() == teamColor) { continue; }
-                Collection<ChessMove> threatMoves = enemyPiece.pieceMoves(tempBoard, enemyPosition);
+                Collection<ChessMove> threatMoves = enemyPiece.pieceMoves(board, enemyPosition);
                 for (ChessMove threat : threatMoves) {
                     if (threat.getEndPosition().equals(kingPosition)) { return true; }
                 }
@@ -133,13 +134,13 @@ public class ChessGame {
     }
 
     /**
-     * Finds the King of a given side. NOTE: Uses tempBoard.
+     * Finds the King of a given side.
      */
     private ChessPosition findKingPosition(TeamColor teamColor) {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition currPos = new ChessPosition(row, col);
-                ChessPiece currPiece = tempBoard.getPiece(currPos);
+                ChessPiece currPiece = board.getPiece(currPos);
                 if (currPiece == null) { continue; }
                 if (currPiece.getTeamColor() == teamColor && currPiece.getPieceType() == ChessPiece.PieceType.KING) {
                     return currPos;

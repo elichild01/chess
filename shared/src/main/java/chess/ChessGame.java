@@ -17,7 +17,7 @@ public class ChessGame {
     public ChessGame() {
         board = new ChessBoard();
         board.resetBoard();
-        teamTurn = TeamColor.BLACK;
+        teamTurn = TeamColor.WHITE;
     }
 
     /**
@@ -33,7 +33,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        teamTurn = team;
     }
 
     /**
@@ -82,7 +82,7 @@ public class ChessGame {
             if (possMove.equals(move)) {
                 tempBoard.addPiece(move.getEndPosition(), piece);
                 tempBoard.addPiece(startPosition, null);
-                return !isInCheck(this.teamTurn);
+                return !isInCheck(piece.getTeamColor());
             }
         }
         return false;

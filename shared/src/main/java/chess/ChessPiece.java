@@ -78,6 +78,17 @@ public class ChessPiece {
                         validMoves.add(newMove);
                     }
                 }
+                // Add castling moves
+                if (!board.getHasLostCastle(myColor, true)) {
+                    ChessPosition castlePosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn()-2);
+                    ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
+                    validMoves.add(newMove);
+                }
+                if (!board.getHasLostCastle(myColor, false)) {
+                    ChessPosition castlePosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn()+2);
+                    ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
+                    validMoves.add(newMove);
+                }
                 break;
             case QUEEN:
                 // Loop through the eight directions Queens can travel

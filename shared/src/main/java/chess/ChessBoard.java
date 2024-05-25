@@ -12,11 +12,24 @@ import java.util.Objects;
 public class ChessBoard {
 
     private ChessPiece[][] pieces;
+    private boolean blackLostKingsideCastle;
+    private boolean blackLostQueensideCastle;
+    private boolean whiteLostKingsideCastle;
+    private boolean whiteLostQueensideCastle;
+    private ChessPosition enPassantVulnerability;
 
     public ChessBoard() {
         this.pieces = new ChessPiece[8][8];
+        blackLostQueensideCastle = false;
+        blackLostKingsideCastle = false;
+        whiteLostQueensideCastle = false;
+        whiteLostKingsideCastle = false;
     }
 
+    /**
+     * Secondary constructor to aid in deep copies
+     * @param board
+     */
     public ChessBoard(ChessBoard board) {
         this.pieces = new ChessPiece[8][8];
         for (int i = 0; i <= 7; i++) {
@@ -26,6 +39,34 @@ public class ChessBoard {
                 }
             }
         }
+        this.blackLostQueensideCastle = board.getHasLostCastle(ChessGame.TeamColor.BLACK, true);
+        this.blackLostKingsideCastle = board.getHasLostCastle(ChessGame.TeamColor.BLACK, false);
+        this.whiteLostQueensideCastle = board.getHasLostCastle(ChessGame.TeamColor.WHITE, true);
+        this.whiteLostKingsideCastle = board.getHasLostCastle(ChessGame.TeamColor.WHITE, false);
+    }
+
+    /**
+     * Returns castling eligibility (only based on whether or not pieces have moved) of a color on a particular side
+     * @param color
+     * @param queenSide
+     */
+    public boolean getHasLostCastle(ChessGame.TeamColor color, boolean queenSide) {
+        if (color == ChessGame.TeamColor.BLACK && queenSide) { return blackLostQueensideCastle; }
+        else if (color == ChessGame.TeamColor.BLACK) { return blackLostKingsideCastle; }
+        else if (color == ChessGame.TeamColor.WHITE && queenSide) { return whiteLostQueensideCastle; }
+        else { return whiteLostKingsideCastle; }
+    }
+
+    /**
+     * Sets castling eligibility (only based on whether or not pieces have moved) of a color on a particular side
+     * @param color
+     * @param queenSide
+     */
+    public void removeCastleEligibility(ChessGame.TeamColor color, boolean queenSide) {
+        if (color == ChessGame.TeamColor.BLACK && queenSide) { blackLostQueensideCastle = true; }
+        if (color == ChessGame.TeamColor.BLACK && !queenSide) { blackLostKingsideCastle = true; }
+        if (color == ChessGame.TeamColor.WHITE && queenSide) { whiteLostQueensideCastle = true; }
+        if (color == ChessGame.TeamColor.WHITE && !queenSide) { whiteLostKingsideCastle = true; }
     }
 
     /**

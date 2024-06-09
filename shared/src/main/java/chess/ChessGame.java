@@ -139,16 +139,24 @@ public class ChessGame {
                 board.addPiece(startPosition, null);
             }
             teamTurn = teamTurn == TeamColor.BLACK ? TeamColor.WHITE : TeamColor.BLACK;
+
+            // Remove castling eligibility, if applicable
+            if (piece.getPieceType() == ChessPiece.PieceType.KING) {
+                board.removeCastleEligibility(piece.getTeamColor(), true);
+                board.removeCastleEligibility(piece.getTeamColor(), false);
+            } else if (piece.getPieceType() == ChessPiece.PieceType.ROOK
+                    && startPosition.getRow() == (piece.getTeamColor() == TeamColor.WHITE ? 1 : 8)) {
+                if (startPosition.getColumn() == 1) {
+                    board.removeCastleEligibility(piece.getTeamColor(), true);
+                } else if (startPosition.getColumn() == 8) {
+                    board.removeCastleEligibility(piece.getTeamColor(), false);
+                }
+            }
         } else {
             throw new InvalidMoveException();
         }
     }
-//    //FIXME add docstring here
-//    public boolean isCastlingMove(ChessMove move) {
-//        ChessPiece piece = board.getPiece(move.getStartPosition());
-//        if (piece.getPieceType() != ChessPiece.PieceType.KING) { return false; }
-//        if ()
-//    }
+
 
     /**
      * Determines if the given team is in check.

@@ -122,9 +122,22 @@ public class ChessGame {
             if (move.getPromotionPiece() != null) {
                 piece = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
             }
-            board.addPiece(move.getEndPosition(), piece);
-            board.addPiece(move.getStartPosition(), null);
-            // TODO: If castling move, move rook
+            ChessPosition startPosition = move.getStartPosition();
+            ChessPosition endPosition = move.getEndPosition();
+            boolean isCastle = piece.getPieceType() == ChessPiece.PieceType.KING && Math.abs(startPosition.getColumn() - endPosition.getColumn()) == 2;
+            if (isCastle) {
+                boolean isQueenside = endPosition.getColumn()==3;
+                ChessPosition halfwayPosition = new ChessPosition(startPosition.getRow(), isQueenside ? 4 : 6);
+                ChessPosition rookPosition = new ChessPosition(startPosition.getRow(), isQueenside ? 1 : 8);
+                ChessPiece castlingRook = board.getPiece(rookPosition);
+                board.addPiece(endPosition, piece);
+                board.addPiece(startPosition, null);
+                board.addPiece(halfwayPosition, castlingRook);
+                board.addPiece(rookPosition, null);
+            } else {
+                board.addPiece(endPosition, piece);
+                board.addPiece(startPosition, null);
+            }
             teamTurn = teamTurn == TeamColor.BLACK ? TeamColor.WHITE : TeamColor.BLACK;
         } else {
             throw new InvalidMoveException();

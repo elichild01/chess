@@ -74,33 +74,36 @@ public class ChessGame {
     private boolean isValidMove(ChessMove move) {
         ChessBoard origBoard = new ChessBoard(board);
         ChessPosition startPosition = move.getStartPosition();
+        ChessPosition endPosition = move.getEndPosition();
         ChessPiece piece = board.getPiece(startPosition);
         if (piece==null) { return false; }
         Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
         for (ChessMove possMove : possibleMoves) {
             if (possMove.equals(move)) {
-                boolean isCastle = piece.getPieceType() == ChessPiece.PieceType.KING;// &&
-                board.addPiece(move.getEndPosition(), piece);
-                board.addPiece(startPosition, null);
-                // TODO: If castling move, move rook
-                boolean inCheck = isInCheck(piece.getTeamColor());
-                // checks if move is an invalid castling move
-                boolean brokeCastlingRules = false;
-                if (piece.getPieceType() == ChessPiece.PieceType.KING) {
-                    int startCol = startPosition.getColumn();
-                    int endCol = move.getEndPosition().getColumn();
-                    boolean isCastlingMove = Math.abs(startCol-endCol)==2;
-                    if (isCastlingMove) {
-                        if (startCol != 5) { brokeCastlingRules = true; }
-                        // FIXME make checks in hasLostCastle to be more robust to poor start positions, if necessary
-                        ChessPiece jumpedPiece = origBoard.getPiece(new ChessPosition(startPosition.getRow(), (startCol+endCol)/2));
-                        if (jumpedPiece != null) { brokeCastlingRules = true; }
-                        boolean isQueenSide = endCol == 3;
-//                        ChessPiece castlingPartnerRook = isQueenSide ? ;
-                    }
+                boolean isCastle = piece.getPieceType() == ChessPiece.PieceType.KING && Math.abs(startPosition.getColumn() - endPosition.getColumn()) == 2;
+                boolean inCheck;
+                if (isCastle) {
+                    boolean isQueenside = endPosition.getColumn()==3;
+                    inCheck = isInCheck(piece.getTeamColor());
+                    ChessPosition halfwayPosition = new ChessPosition(startPosition.getRow(), isQueenside ? 4 : 6);
+                    ChessPosition rookPosition = new ChessPosition(startPosition.getRow(), isQueenside ? 1 : 8);
+                    ChessPiece castlingRook = board.getPiece(rookPosition);
+                    board.addPiece(halfwayPosition, piece);
+                    board.addPiece(startPosition, null);
+                    inCheck = inCheck || isInCheck(piece.getTeamColor());
+                    board.addPiece(endPosition, piece);
+                    board.addPiece(halfwayPosition, null);
+                    inCheck = inCheck || isInCheck(piece.getTeamColor());
+                    board.addPiece(halfwayPosition, castlingRook);
+                    board.addPiece(rookPosition, null);
+                    inCheck = inCheck || isInCheck(piece.getTeamColor());
+                } else {
+                    board.addPiece(endPosition, piece);
+                    board.addPiece(startPosition, null);
+                    inCheck = isInCheck(piece.getTeamColor());
                 }
                 this.board = new ChessBoard(origBoard);
-                return !inCheck && !brokeCastlingRules;
+                return !inCheck;
             }
         }
         return false;

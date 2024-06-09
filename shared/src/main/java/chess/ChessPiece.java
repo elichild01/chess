@@ -79,24 +79,35 @@ public class ChessPiece {
                     }
                 }
                 // Add castling moves
-                if (myPosition.getRow() == 5) {
-                    if (!board.getHasLostCastle(myColor, true)) {
-                        ChessPosition castlePosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn() - 2);
-                        // Checks if we have run off the board
-                        if (castlePosition.isOffBoard()) {
-                            break;
+                if (myPosition.getColumn() == 5) {
+                    int colorModifier = myColor == ChessGame.TeamColor.WHITE ? 1 : -1;
+                    // If the king's row isn't what it should be to castle, break
+                    int kingRow = myPosition.getRow();
+                    if (kingRow + 3.5*colorModifier != 4.5) { break; }
+                    if (!board.getHasLostCastle(myColor, true)
+                            && board.getPiece(new ChessPosition(kingRow, 4))==null
+                            && board.getPiece(new ChessPosition(kingRow, 3))==null
+                            && board.getPiece(new ChessPosition(kingRow, 2))==null) {
+                        ChessPiece castlingRook = board.getPiece(new ChessPosition(kingRow, 1));
+                        if (castlingRook != null
+                                && castlingRook.getPieceType() == PieceType.ROOK
+                                && castlingRook.getTeamColor() == myColor) {
+                            ChessPosition castlePosition = new ChessPosition(kingRow, 3);
+                            ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
+                            validMoves.add(newMove);
                         }
-                        ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
-                        validMoves.add(newMove);
                     }
-                    if (!board.getHasLostCastle(myColor, false)) {
-                        ChessPosition castlePosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn() + 2);
-                        // Checks if we have run off the board
-                        if (castlePosition.isOffBoard()) {
-                            break;
+                    if (!board.getHasLostCastle(myColor, false)
+                            && board.getPiece(new ChessPosition(kingRow, 6))==null
+                            && board.getPiece(new ChessPosition(kingRow, 7))==null) {
+                        ChessPiece castlingRook = board.getPiece(new ChessPosition(kingRow, 8));
+                        if (castlingRook != null
+                                && castlingRook.getPieceType() == PieceType.ROOK
+                                && castlingRook.getTeamColor() == myColor) {
+                            ChessPosition castlePosition = new ChessPosition(kingRow, 7);
+                            ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
+                            validMoves.add(newMove);
                         }
-                        ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
-                        validMoves.add(newMove);
                     }
                 }
                 break;
@@ -130,7 +141,7 @@ public class ChessPiece {
                 // Pieces pawns can be promoted to
                 PieceType[] promoPieces = {PieceType.QUEEN, PieceType.KNIGHT, PieceType.ROOK, PieceType.BISHOP};
                 // Loops through the ways pawns can travel without capturing
-                int colorModifier = myColor==ChessGame.TeamColor.WHITE ? 1 : -1;
+                int colorModifier = myColor == ChessGame.TeamColor.WHITE ? 1 : -1;
                 for (int vdir = 1; vdir <= 2; vdir++) {
                     ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir*colorModifier, myPosition.getColumn());
                     // If attempting to move two spaces, checks if legal

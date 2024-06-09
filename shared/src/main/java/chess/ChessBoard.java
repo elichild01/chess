@@ -28,7 +28,7 @@ public class ChessBoard {
 
     /**
      * Secondary constructor to aid in deep copies
-     * @param board
+     * @param board board to duplicate
      */
     public ChessBoard(ChessBoard board) {
         this.pieces = new ChessPiece[8][8];
@@ -46,9 +46,9 @@ public class ChessBoard {
     }
 
     /**
-     * Returns castling eligibility (only based on whether or not pieces have moved) of a color on a particular side
-     * @param color
-     * @param queenSide
+     * Returns castling eligibility (only based on whether pieces have moved) of a color on a particular side
+     * @param color the TeamColor of the side trying to castle
+     * @param queenSide boolean describing whether attempted castle is queenSide or kingSide.
      */
     public boolean getHasLostCastle(ChessGame.TeamColor color, boolean queenSide) {
         if (color == ChessGame.TeamColor.BLACK && queenSide) { return blackLostQueensideCastle; }
@@ -58,9 +58,9 @@ public class ChessBoard {
     }
 
     /**
-     * Sets castling eligibility (only based on whether or not pieces have moved) of a color on a particular side
-     * @param color
-     * @param queenSide
+     * Sets castling eligibility (only based on whether pieces have moved) of a color on a particular side
+     * @param color the TeamColor of the side castling
+     * @param queenSide boolean describing whether castle is queenSide or kingSide.
      */
     public void removeCastleEligibility(ChessGame.TeamColor color, boolean queenSide) {
         if (color == ChessGame.TeamColor.BLACK && queenSide) { blackLostQueensideCastle = true; }

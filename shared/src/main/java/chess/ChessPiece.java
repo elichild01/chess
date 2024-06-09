@@ -59,8 +59,8 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         Collection<ChessMove> validMoves = new ArrayList<>();
-        ChessGame.TeamColor myColor = board.getPiece(myPosition).getTeamColor();
-        switch (this.pType) {
+        ChessGame.TeamColor myColor = this.getTeamColor();
+        switch (this.getPieceType()) {
             case KING:
                 // Loop through the eight directions Kings can travel
                 for (int hdir = -1; hdir <= 1; hdir++) {
@@ -79,15 +79,25 @@ public class ChessPiece {
                     }
                 }
                 // Add castling moves
-                if (!board.getHasLostCastle(myColor, true)) {
-                    ChessPosition castlePosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn()-2);
-                    ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
-                    validMoves.add(newMove);
-                }
-                if (!board.getHasLostCastle(myColor, false)) {
-                    ChessPosition castlePosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn()+2);
-                    ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
-                    validMoves.add(newMove);
+                if (myPosition.getRow() == 5) {
+                    if (!board.getHasLostCastle(myColor, true)) {
+                        ChessPosition castlePosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn() - 2);
+                        // Checks if we have run off the board
+                        if (castlePosition.isOffBoard()) {
+                            break;
+                        }
+                        ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
+                        validMoves.add(newMove);
+                    }
+                    if (!board.getHasLostCastle(myColor, false)) {
+                        ChessPosition castlePosition = new ChessPosition(myPosition.getRow(), myPosition.getColumn() + 2);
+                        // Checks if we have run off the board
+                        if (castlePosition.isOffBoard()) {
+                            break;
+                        }
+                        ChessMove newMove = new ChessMove(myPosition, castlePosition, null);
+                        validMoves.add(newMove);
+                    }
                 }
                 break;
             case QUEEN:

@@ -24,6 +24,7 @@ public class ChessBoard {
         blackLostKingsideCastle = false;
         whiteLostQueensideCastle = false;
         whiteLostKingsideCastle = false;
+        enPassantVulnerability = null;
     }
 
     /**
@@ -126,7 +127,12 @@ public class ChessBoard {
                 addPiece(position, piece);
             }
         }
-        // FIXME reset castling and en passant flags
+        // reset en passant and castling flags
+        blackLostQueensideCastle = false;
+        blackLostKingsideCastle = false;
+        whiteLostQueensideCastle = false;
+        whiteLostKingsideCastle = false;
+        enPassantVulnerability = null;
     }
 
     private static ChessPiece.PieceType getPieceType(int col) {

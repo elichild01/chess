@@ -76,11 +76,14 @@ public class ChessGame {
         ChessPosition startPosition = move.getStartPosition();
         ChessPosition endPosition = move.getEndPosition();
         ChessPiece piece = board.getPiece(startPosition);
-        if (piece==null) { return false; }
+        if (piece == null) { return false; }
         Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
         for (ChessMove possMove : possibleMoves) {
             if (possMove.equals(move)) {
                 boolean isCastle = piece.getPieceType() == ChessPiece.PieceType.KING && Math.abs(startPosition.getColumn() - endPosition.getColumn()) == 2;
+                boolean isEnPassant = piece.getPieceType() == ChessPiece.PieceType.PAWN
+                        && startPosition.getColumn() != endPosition.getColumn()
+                        && board.getPiece(endPosition) == null;
                 boolean inCheck;
                 if (isCastle) {
                     boolean isQueenside = endPosition.getColumn()==3;
@@ -100,6 +103,10 @@ public class ChessGame {
                 } else {
                     board.addPiece(endPosition, piece);
                     board.addPiece(startPosition, null);
+                    if (isEnPassant) {
+                        ChessPosition passantVictimPosition = new ChessPosition(startPosition.getRow(), endPosition.getColumn());
+                        board.addPiece(passantVictimPosition, null);
+                    }
                     inCheck = isInCheck(piece.getTeamColor());
                 }
                 this.board = new ChessBoard(origBoard);
@@ -125,6 +132,9 @@ public class ChessGame {
             ChessPosition startPosition = move.getStartPosition();
             ChessPosition endPosition = move.getEndPosition();
             boolean isCastle = piece.getPieceType() == ChessPiece.PieceType.KING && Math.abs(startPosition.getColumn() - endPosition.getColumn()) == 2;
+            boolean isEnPassant = piece.getPieceType() == ChessPiece.PieceType.PAWN
+                    && startPosition.getColumn() != endPosition.getColumn()
+                    && board.getPiece(endPosition) == null;
             if (isCastle) {
                 boolean isQueenside = endPosition.getColumn()==3;
                 ChessPosition halfwayPosition = new ChessPosition(startPosition.getRow(), isQueenside ? 4 : 6);
@@ -137,6 +147,10 @@ public class ChessGame {
             } else {
                 board.addPiece(endPosition, piece);
                 board.addPiece(startPosition, null);
+                if (isEnPassant) {
+                    ChessPosition passantVictimPosition = new ChessPosition(startPosition.getRow(), endPosition.getColumn());
+                    board.addPiece(passantVictimPosition, null);
+                }
             }
             teamTurn = teamTurn == TeamColor.BLACK ? TeamColor.WHITE : TeamColor.BLACK;
 
@@ -151,6 +165,16 @@ public class ChessGame {
                 } else if (startPosition.getColumn() == 8) {
                     board.removeCastleEligibility(piece.getTeamColor(), false);
                 }
+            }
+
+            // Set en passant vulnerability, if applicable
+            if (piece.getPieceType() == ChessPiece.PieceType.PAWN
+                && Math.abs(startPosition.getRow() - endPosition.getRow()) == 2
+            ) {
+                int rowJumpedOver = (startPosition.getRow() + endPosition.getRow()) / 2;
+                board.setEnPassantVulnerability(new ChessPosition(rowJumpedOver, startPosition.getColumn()));
+            } else {
+                board.setEnPassantVulnerability(null);
             }
         } else {
             throw new InvalidMoveException();

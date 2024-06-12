@@ -43,6 +43,7 @@ public class ChessBoard {
         this.blackLostKingsideCastle = board.getHasLostCastle(ChessGame.TeamColor.BLACK, false);
         this.whiteLostQueensideCastle = board.getHasLostCastle(ChessGame.TeamColor.WHITE, true);
         this.whiteLostKingsideCastle = board.getHasLostCastle(ChessGame.TeamColor.WHITE, false);
+        this.enPassantVulnerability = board.getEnPassantVulnerability();
     }
 
     /**
@@ -90,6 +91,14 @@ public class ChessBoard {
         return this.pieces[position.getRow()-1][position.getColumn()-1];
     }
 
+    public ChessPosition getEnPassantVulnerability() {
+        return enPassantVulnerability;
+    }
+
+    public void setEnPassantVulnerability(ChessPosition enPassantVulnerability) {
+        this.enPassantVulnerability = enPassantVulnerability;
+    }
+
     /**
      * Sets the board to the default starting board
      * (How the game of chess normally starts)
@@ -117,6 +126,7 @@ public class ChessBoard {
                 addPiece(position, piece);
             }
         }
+        // FIXME reset castling and en passant flags
     }
 
     private static ChessPiece.PieceType getPieceType(int col) {

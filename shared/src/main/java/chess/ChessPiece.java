@@ -168,9 +168,13 @@ public class ChessPiece {
                     }
                 }
                 // Loops through the ways pawns can capture
-                // FIXME: Does not yet account for en passant!
                 for (int hdir = -1; hdir <= 1; hdir+=2) {
                     ChessPosition currPosition = new ChessPosition(myPosition.getRow()+colorModifier, myPosition.getColumn()+hdir);
+                    // Checks if we can en passant!
+                    if (currPosition.equals(board.getEnPassantVulnerability())) {
+                        ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+                        validMoves.add(newMove);
+                    }
                     // Checks if we have run off the board
                     if (currPosition.isOffBoard()) { continue; }
                     // Checks if we are sitting on a piece (friendly or unfriendly)
@@ -178,7 +182,7 @@ public class ChessPiece {
                     if (localInhabitant == null) { continue; }
                     if (localInhabitant.getTeamColor() == myColor) { continue; }
                     // Adds the current position to list, with all possible promotions
-                    if (currPosition.getRow()-3.5*colorModifier==4.5) {
+                    if (currPosition.getRow()-3.5*colorModifier == 4.5) {
                         for (PieceType promoPiece : promoPieces) {
                             ChessMove newMove = new ChessMove(myPosition, currPosition, promoPiece);
                             validMoves.add(newMove);

@@ -1,4 +1,6 @@
 package requestresult;
 
-public record CreateResult() {
+public record CreateResult(
+        int gameID
+) {
 }

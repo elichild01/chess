@@ -2,22 +2,27 @@ package service;
 
 import dataaccess.GameDAO;
 import model.GameData;
+import requestresult.*;
 
 import java.util.Collection;
 
 public class GameService {
     private final GameDAO gameDb;
 
-    public Collection<GameData> listAllGames() {
-
+    public GameService(GameDAO gameDb) {
+        this.gameDb = gameDb;
     }
 
-    public GameData createGame(String gameName) {
-
+    public ListResult list(ListRequest request) {
+        return null;
     }
 
-    public void deleteAllGames() {
+    public CreateResult create(CreateRequest request) {
+        return null;
+    }
 
+    public JoinResult join(JoinRequest request) {
+        return null;
     }
 
 }

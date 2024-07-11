@@ -1,5 +1,6 @@
 package service;
 
+import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import model.GameData;
 import requestresult.*;
@@ -8,9 +9,11 @@ import java.util.Collection;
 
 public class GameService {
     private final GameDAO gameDb;
+    private final AuthDAO authDb;
 
-    public GameService(GameDAO gameDb) {
+    public GameService(AuthDAO authDb, GameDAO gameDb) {
         this.gameDb = gameDb;
+        this.authDb = authDb;
     }
 
     public ListResult list(ListRequest request) {

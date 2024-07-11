@@ -29,4 +29,22 @@ public class MemoryGameDAO implements GameDAO {
     public Collection<GameData> listAllGames() {
         return new ArrayList<>(games.values());
     }
+
+    public void joinGame(ChessGame.TeamColor color, int gameID, String username) throws DataAccessException {
+        GameData game = games.get(gameID);
+        if (game == null) {
+            throw new DataAccessException("bad request");
+        }
+        String userToReplace = color == ChessGame.TeamColor.WHITE ? game.whiteUsername() : game.blackUsername();
+        if (userToReplace != null && !userToReplace.isEmpty()) {
+            throw new DataAccessException("already taken");
+        }
+        GameData updatedGame;
+        if (color == ChessGame.TeamColor.WHITE) {
+            updatedGame = new GameData(gameID, username, game.blackUsername(), game.gameName(), game.game());
+        } else {
+            updatedGame = new GameData(gameID, game.whiteUsername(), username, game.gameName(), game.game());
+        }
+        games.put(gameID, updatedGame);
+    }
 }

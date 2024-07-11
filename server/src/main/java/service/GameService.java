@@ -37,7 +37,12 @@ public class GameService {
     }
 
     public JoinResult join(JoinRequest request) throws DataAccessException {
-        return null;
+        AuthData auth = authDb.getAuth(request.authToken());
+        if (auth == null) {
+            throw new DataAccessException("unauthorized");
+        }
+        gameDb.joinGame(request.playerColor(), request.gameID(), auth.username());
+        return new JoinResult();
     }
 
 }

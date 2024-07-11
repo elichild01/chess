@@ -126,7 +126,7 @@ public class GameServiceTest {
     }
     @ParameterizedTest
     @MethodSource("memAndSqlDAOs")
-    public void spotAlreadyTakenThrowsException(Class<? extends AuthDAO> authDAOClass,
+    public void joinSpotAlreadyTakenThrowsException(Class<? extends AuthDAO> authDAOClass,
                                             Class<? extends GameDAO> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();

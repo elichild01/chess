@@ -28,7 +28,12 @@ public class GameService {
     }
 
     public CreateResult create(CreateRequest request) throws DataAccessException{
-        return null;
+        AuthData auth = authDb.getAuth(request.authToken());
+        if (auth == null) {
+            throw new DataAccessException("unauthorized");
+        }
+        GameData game = gameDb.createGame(request.gameName());
+        return new CreateResult(game.gameID());
     }
 
     public JoinResult join(JoinRequest request) throws DataAccessException {

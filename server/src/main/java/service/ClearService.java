@@ -1,26 +1,26 @@
 package service;
 
-import dataaccess.AuthDAO;
+import dataaccess.AuthDataAccess;
 import dataaccess.DataAccessException;
-import dataaccess.GameDAO;
-import dataaccess.UserDAO;
+import dataaccess.GameDataAccess;
+import dataaccess.UserDataAccess;
 import requestresult.ClearResult;
 
 public class ClearService {
-    private final UserDAO userDb;
-    private final AuthDAO authDb;
-    private final GameDAO gameDb;
+    private final UserDataAccess userDataAccess;
+    private final AuthDataAccess authDataAccess;
+    private final GameDataAccess gameDataAccess;
 
-    public ClearService(UserDAO userDb, AuthDAO authDb, GameDAO gameDb) {
-        this.userDb = userDb;
-        this.authDb = authDb;
-        this.gameDb = gameDb;
+    public ClearService(UserDataAccess userDataAccess, AuthDataAccess authDataAccess, GameDataAccess gameDataAccess) {
+        this.userDataAccess = userDataAccess;
+        this.authDataAccess = authDataAccess;
+        this.gameDataAccess = gameDataAccess;
     }
 
     public ClearResult clear() throws DataAccessException {
-        userDb.deleteAllUsers();
-        authDb.deleteAllAuths();
-        gameDb.deleteAllGames();
+        userDataAccess.deleteAllUsers();
+        authDataAccess.deleteAllAuths();
+        gameDataAccess.deleteAllGames();
         return new ClearResult();
     }
 }

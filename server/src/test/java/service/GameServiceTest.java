@@ -15,17 +15,17 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GameServiceTest {
-    static Stream<Arguments> memAndSqlDAOs() {
+    static Stream<Arguments> dataAccessTypes() {
         return Stream.of(
-                Arguments.of(MemoryAuthDAO.class, MemoryGameDAO.class)
+                Arguments.of(MemoryAuthDataAccess.class, MemoryGameDataAccess.class)
         );
     }
 
     // create
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void createGame(Class<? extends AuthDAO> authDAOClass,
-                             Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void createGame(Class<? extends AuthDataAccess> authDAOClass,
+                             Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDAOInstance, gameDAOInstance);
@@ -37,9 +37,9 @@ public class GameServiceTest {
         assertNotNull(result);
     }
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void createGameUnauthorizedThrowsException(Class<? extends AuthDAO> authDAOClass,
-                             Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void createGameUnauthorizedThrowsException(Class<? extends AuthDataAccess> authDAOClass,
+                             Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDAOInstance, gameDAOInstance);
@@ -50,9 +50,9 @@ public class GameServiceTest {
 
     // list
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void listAllGamesReturnsZeroAndOneCorrectly(Class<? extends AuthDAO> authDAOClass,
-                             Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void listAllGamesReturnsZeroAndOneCorrectly(Class<? extends AuthDataAccess> authDAOClass,
+                             Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDAOInstance, gameDAOInstance);
@@ -70,9 +70,9 @@ public class GameServiceTest {
         assertEquals(gameName, service.list(request).gameList().toArray(new GameData[0])[0].gameName());
     }
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void listGameUnauthorizedThrowsException(Class<? extends AuthDAO> authDAOClass,
-                                                      Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void listGameUnauthorizedThrowsException(Class<? extends AuthDataAccess> authDAOClass,
+                                                      Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDAOInstance, gameDAOInstance);
@@ -83,9 +83,9 @@ public class GameServiceTest {
 
     // join
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void joinGame(Class<? extends AuthDAO> authDAOClass,
-                             Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void joinGame(Class<? extends AuthDataAccess> authDAOClass,
+                             Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDAOInstance, gameDAOInstance);
@@ -101,9 +101,9 @@ public class GameServiceTest {
         assertEquals("BYU students", firstGame.whiteUsername());
     }
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void joinGameUnauthorizedThrowsException(Class<? extends AuthDAO> authDAOClass,
-                                                    Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void joinGameUnauthorizedThrowsException(Class<? extends AuthDataAccess> authDAOClass,
+                                                    Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDAOInstance, gameDAOInstance);
@@ -113,9 +113,9 @@ public class GameServiceTest {
         assertThrows(DataAccessException.class, () -> service.join(request));
     }
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void joinFakeGameThrowsException(Class<? extends AuthDAO> authDAOClass,
-                                                    Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void joinFakeGameThrowsException(Class<? extends AuthDataAccess> authDAOClass,
+                                                    Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDAOInstance, gameDAOInstance);
@@ -125,9 +125,9 @@ public class GameServiceTest {
         assertThrows(DataAccessException.class, () -> service.join(request));
     }
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void joinSpotAlreadyTakenThrowsException(Class<? extends AuthDAO> authDAOClass,
-                                            Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void joinSpotAlreadyTakenThrowsException(Class<? extends AuthDataAccess> authDAOClass,
+                                            Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDAOInstance, gameDAOInstance);

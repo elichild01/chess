@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-public class MemoryGameDAO implements GameDAO {
+public class MemoryGameDataAccess implements GameDataAccess {
     private int nextId = 1;
     final private HashMap<Integer, GameData> games = new HashMap<>();
 
     public GameData createGame(String gameName) {
         String whiteUsername = "";
         String blackUsername = "";
-        int gameId = nextId++;
+        int gameID = nextId++;
         ChessGame game = new ChessGame();
 
-        GameData gameData = new GameData(gameId, whiteUsername, blackUsername, gameName, game);
-        games.put(gameId, gameData);
+        GameData gameData = new GameData(gameID, whiteUsername, blackUsername, gameName, game);
+        games.put(gameID, gameData);
         return gameData;
     }
 

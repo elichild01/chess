@@ -4,7 +4,7 @@ import model.UserData;
 
 import java.util.HashMap;
 
-public class MemoryUserDAO implements UserDAO {
+public class MemoryUserDataAccess implements UserDataAccess {
     private int nextId = 1;
     final private HashMap<Integer, UserData> users = new HashMap<>();
 

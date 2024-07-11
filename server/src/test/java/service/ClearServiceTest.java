@@ -13,17 +13,17 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class ClearServiceTest {
 
-    static Stream<Arguments> memAndSqlDAOs() {
+    static Stream<Arguments> dataAccessTypes() {
         return Stream.of(
-                Arguments.of(MemoryUserDAO.class, MemoryAuthDAO.class, MemoryGameDAO.class)
+                Arguments.of(MemoryUserDataAccess.class, MemoryAuthDataAccess.class, MemoryGameDataAccess.class)
         );
     }
 
     // register
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void clear(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                      Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @MethodSource("dataAccessTypes")
+    public void clear(Class<? extends UserDataAccess> userDAOClass, Class<? extends AuthDataAccess> authDAOClass,
+                      Class<? extends GameDataAccess> gameDAOClass) throws Exception {
         var userDAOInstance = userDAOClass.getDeclaredConstructor().newInstance();
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();

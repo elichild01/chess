@@ -28,7 +28,6 @@ public class MemoryGameDAO implements GameDAO {
     }
 
     public Collection<GameData> listAllGames() {
-        Collection<GameData> allGames = new ArrayList<>(games.values());
-        return allGames;
+        return new ArrayList<>(games.values());
     }
 }

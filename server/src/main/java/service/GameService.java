@@ -1,7 +1,9 @@
 package service;
 
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
+import model.AuthData;
 import model.GameData;
 import requestresult.*;
 
@@ -16,15 +18,20 @@ public class GameService {
         this.authDb = authDb;
     }
 
-    public ListResult list(ListRequest request) {
+    public ListResult list(ListRequest request) throws DataAccessException {
+        AuthData auth = authDb.getAuth(request.authToken());
+        if (auth == null) {
+            throw new DataAccessException("unauthorized");
+        }
+        Collection<GameData> games = gameDb.listAllGames();
+        return new ListResult(games);
+    }
+
+    public CreateResult create(CreateRequest request) throws DataAccessException{
         return null;
     }
 
-    public CreateResult create(CreateRequest request) {
-        return null;
-    }
-
-    public JoinResult join(JoinRequest request) {
+    public JoinResult join(JoinRequest request) throws DataAccessException {
         return null;
     }
 

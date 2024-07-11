@@ -3,7 +3,6 @@ package dataaccess;
 import chess.ChessGame;
 import model.GameData;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,7 +11,7 @@ public class MemoryGameDAO implements GameDAO {
     private int nextId = 1;
     final private HashMap<Integer, GameData> games = new HashMap<>();
 
-    public GameData createGame(String gameName) throws DataAccessException {
+    public GameData createGame(String gameName) {
         String whiteUsername = "";
         String blackUsername = "";
         int gameId = nextId++;

@@ -6,6 +6,7 @@ import model.UserData;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import requestresult.*;
 
 import java.util.stream.Stream;
@@ -15,15 +16,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UserServiceTest {
     static Stream<Arguments> memAndSqlDAOs() {
         return Stream.of(
-                Arguments.of(MemoryUserDAO.class, MemoryAuthDAO.class, MemoryGameDAO.class)
+                Arguments.of(MemoryUserDAO.class, MemoryAuthDAO.class)
         );
     }
 
     // register
     @ParameterizedTest
     @MethodSource("memAndSqlDAOs")
-    public void addSingleUserAddsUser(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                      Class<? extends GameDAO> gameDAOClass) throws Exception {
+    public void addSingleUserAddsUser(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass) throws Exception {
         var userDAOInstance = userDAOClass.getDeclaredConstructor().newInstance();
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDAOInstance, authDAOInstance);
@@ -44,8 +44,7 @@ public class UserServiceTest {
 
     @ParameterizedTest
     @MethodSource("memAndSqlDAOs")
-    public void addMultipleUsersGivesMultipleUsers(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                                   Class<? extends GameDAO> gameDAOClass) throws Exception {
+    public void addMultipleUsersGivesMultipleUsers(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass) throws Exception {
         var userDAOInstance = userDAOClass.getDeclaredConstructor().newInstance();
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDAOInstance, authDAOInstance);
@@ -61,31 +60,28 @@ public class UserServiceTest {
 
     @ParameterizedTest
     @MethodSource("memAndSqlDAOs")
-    public void addDuplicateUsernameThrowsException(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                                    Class<? extends GameDAO> gameDAOClass) throws Exception {
+    public void addDuplicateUsernameThrowsException(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass) throws Exception {
         var userDAOInstance = userDAOClass.getDeclaredConstructor().newInstance();
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDAOInstance, authDAOInstance);
 
         RegisterRequest request = new RegisterRequest("myusername", "mypassword", "myemail@test.com");
-        RegisterResult result = service.register(request);
+        assertDoesNotThrow(() -> service.register(request));
         assertThrows(DataAccessException.class, () -> service.register(request));
     }
 
     // getNumUsers
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void numUsersThrowsExceptionIfNullDatabase(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                                      Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @ValueSource(classes = {MemoryAuthDAO.class})
+    public void numUsersThrowsExceptionIfNullDatabase(Class<? extends AuthDAO> authDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(null, authDAOInstance);
         assertThrows(NullPointerException.class, service::getNumUsers);
     }
 
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void numUsersReturnsNumUsers(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                        Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @ValueSource(classes = {MemoryAuthDAO.class})
+    public void numUsersReturnsNumUsers(Class<? extends AuthDAO> authDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         MemoryUserDAO users = new MemoryUserDAO();
         for (int i = 0; i <= 5; i++) {
@@ -99,8 +95,7 @@ public class UserServiceTest {
     // login
     @ParameterizedTest
     @MethodSource("memAndSqlDAOs")
-    public void loginExistingUser(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                  Class<? extends GameDAO> gameDAOClass) throws Exception {
+    public void loginExistingUser(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass) throws Exception {
         var userDAOInstance = userDAOClass.getDeclaredConstructor().newInstance();
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDAOInstance, authDAOInstance);
@@ -121,8 +116,7 @@ public class UserServiceTest {
 
     @ParameterizedTest
     @MethodSource("memAndSqlDAOs")
-    public void loginNonexistingUser(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                     Class<? extends GameDAO> gameDAOClass) throws Exception {
+    public void loginNonexistentUser(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass) throws Exception {
         var userDAOInstance = userDAOClass.getDeclaredConstructor().newInstance();
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDAOInstance, authDAOInstance);
@@ -136,8 +130,7 @@ public class UserServiceTest {
 
     @ParameterizedTest
     @MethodSource("memAndSqlDAOs")
-    public void loginWrongPassword(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                   Class<? extends GameDAO> gameDAOClass) throws Exception {
+    public void loginWrongPassword(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass) throws Exception {
         var userDAOInstance = userDAOClass.getDeclaredConstructor().newInstance();
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDAOInstance, authDAOInstance);
@@ -156,9 +149,8 @@ public class UserServiceTest {
 
     // logout
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void standardLogoutSucceeds(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                       Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @ValueSource(classes = {MemoryAuthDAO.class})
+    public void standardLogoutSucceeds(Class<? extends AuthDAO> authDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(null, authDAOInstance);
 
@@ -171,9 +163,8 @@ public class UserServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("memAndSqlDAOs")
-    public void logoutBadAuthThrowsException(Class<? extends UserDAO> userDAOClass, Class<? extends AuthDAO> authDAOClass,
-                                             Class<? extends GameDAO> gameDAOClass) throws Exception {
+    @ValueSource(classes = {MemoryAuthDAO.class})
+    public void logoutBadAuthThrowsException(Class<? extends AuthDAO> authDAOClass) throws Exception {
         var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(null, authDAOInstance);
 

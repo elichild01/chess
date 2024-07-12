@@ -8,6 +8,8 @@ import service.GameService;
 import service.UserService;
 import spark.*;
 
+import java.util.Map;
+
 public class Server {
     private final GameService gameService;
     private final UserService userService;
@@ -80,7 +82,7 @@ public class Server {
             default -> 500;
         };
         res.status(statusCode);
-        res.body(String.format("Error: %s", ex.getMessage()));
+        res.body(new Gson().toJson(Map.of("message", String.format("Error: %s", ex.getMessage()))));
     }
 
     private Object register(Request req, Response res) throws DataAccessException {

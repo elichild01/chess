@@ -7,13 +7,12 @@ import model.AuthData;
 import model.UserData;
 import requestresult.*;
 
-public class UserService {
+public class UserService extends Service {
     private final UserDataAccess userDataAccess;
-    private final AuthDataAccess authDataAccess;
 
     public UserService(UserDataAccess userDataAccess, AuthDataAccess authDataAccess) {
+        super(authDataAccess);
         this.userDataAccess = userDataAccess;
-        this.authDataAccess = authDataAccess;
     }
 
     public RegisterResult register(RegisterRequest request) throws DataAccessException {
@@ -35,6 +34,9 @@ public class UserService {
     }
 
     public LoginResult login(LoginRequest request) throws DataAccessException {
+        if (request.username() == null) {
+            throw new DataAccessException("bad request");
+        }
         UserData user = this.userDataAccess.getUser(request.username());
         if (user == null || !user.password().equals(request.password())) {
             throw new DataAccessException("unauthorized");
@@ -44,10 +46,7 @@ public class UserService {
     }
 
     public LogoutResult logout(LogoutRequest request) throws DataAccessException {
-        AuthData auth = authDataAccess.getAuth(request.authToken());
-        if (auth == null) {
-            throw new DataAccessException("unauthorized");
-        }
+        authenticate(request.authToken());
         authDataAccess.deleteAuth(request.authToken());
         return new LogoutResult();
     }

@@ -6,14 +6,13 @@ import dataaccess.GameDataAccess;
 import dataaccess.UserDataAccess;
 import requestresult.ClearResult;
 
-public class ClearService {
+public class ClearService extends Service {
     private final UserDataAccess userDataAccess;
-    private final AuthDataAccess authDataAccess;
     private final GameDataAccess gameDataAccess;
 
     public ClearService(UserDataAccess userDataAccess, AuthDataAccess authDataAccess, GameDataAccess gameDataAccess) {
+        super(authDataAccess);
         this.userDataAccess = userDataAccess;
-        this.authDataAccess = authDataAccess;
         this.gameDataAccess = gameDataAccess;
     }
 

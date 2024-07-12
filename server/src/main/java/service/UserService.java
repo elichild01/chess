@@ -18,6 +18,9 @@ public class UserService {
 
     public RegisterResult register(RegisterRequest request) throws DataAccessException {
         // add user (exception raised iff username already in use
+        if (request.username() == null || request.password() == null || request.email() == null) {
+            throw new DataAccessException("bad request");
+        }
         UserData newUser = new UserData(request.username(), request.password(), request.email());
         userDataAccess.addUser(newUser);
 

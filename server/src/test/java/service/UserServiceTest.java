@@ -37,7 +37,7 @@ public class UserServiceTest {
         } catch (DataAccessException e) {
             fail(String.format("DataAccessException: %s", e.getMessage()));
         }
-        assertEquals(username, result.userName());
+        assertEquals(username, result.username());
         assertNotNull(result.authToken());
         assertEquals(1, service.getNumUsers());
     }

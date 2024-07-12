@@ -54,7 +54,6 @@ public class Server {
         Spark.port(desiredPort);
 
         Spark.staticFiles.location("web");
-//        Spark.webSocket("/ws", webSocketHandler);
 
         // Register your endpoints and handle exceptions here.
         Spark.delete("/db", this::clear);
@@ -93,7 +92,7 @@ public class Server {
     }
 
     private Object list(Request req, Response res) throws DataAccessException {
-        ListRequest request = new Gson().fromJson(req.body(), ListRequest.class);
+        ListRequest request = new ListRequest(req.headers("authorization"));
         ListResult result = gameService.list(request);
         res.status(successStatus);
         return new Gson().toJson(result);
@@ -113,14 +112,17 @@ public class Server {
     }
 
     private Object logout(Request req, Response res) throws DataAccessException {
-        LogoutRequest request = new Gson().fromJson(req.body(), LogoutRequest.class);
+        LogoutRequest request = new LogoutRequest(req.headers("authorization"));
         LogoutResult result = userService.logout(request);
         res.status(successStatus);
         return new Gson().toJson(result);
     }
 
     private Object create(Request req, Response res) throws DataAccessException {
-        CreateRequest request = new Gson().fromJson(req.body(), CreateRequest.class);
+        String authToken = req.headers("authorization");
+        String gameName = new Gson().fromJson(req.body(), String.class);
+
+        CreateRequest request = new CreateRequest(authToken, gameName);
         CreateResult result = gameService.create(request);
         res.status(successStatus);
         return new Gson().toJson(result);
@@ -128,6 +130,8 @@ public class Server {
 
     private Object join(Request req, Response res) throws DataAccessException {
         JoinRequest request = new Gson().fromJson(req.body(), JoinRequest.class);
+        String authToken = req.headers("authorization");
+        request = new JoinRequest(authToken, request.playerColor(), request.gameID());
         JoinResult result = gameService.join(request);
         res.status(successStatus);
         return new Gson().toJson(result);

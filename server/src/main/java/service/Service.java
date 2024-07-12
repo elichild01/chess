@@ -11,7 +11,7 @@ public abstract class Service {
         this.authDataAccess = authDataAccess;
     }
 
-    public AuthData authenticate(String authToken) throws DataAccessException {
+    protected AuthData authenticate(String authToken) throws DataAccessException {
         if (authToken == null) {
             throw new DataAccessException("bad request");
         }
@@ -20,5 +20,11 @@ public abstract class Service {
             throw new DataAccessException("unauthorized");
         }
         return auth;
+    }
+
+    protected void nullCheckRequest(Record request) throws DataAccessException {
+        if (request == null) {
+            throw new DataAccessException("bad request");
+        }
     }
 }

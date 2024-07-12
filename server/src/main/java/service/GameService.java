@@ -18,18 +18,21 @@ public class GameService extends Service {
     }
 
     public ListResult list(ListRequest request) throws DataAccessException {
+        nullCheckRequest(request);
         authenticate(request.authToken());
         Collection<GameData> games = gameDataAccess.listAllGames();
         return new ListResult(games);
     }
 
     public CreateResult create(CreateRequest request) throws DataAccessException{
+        nullCheckRequest(request);
         authenticate(request.authToken());
         GameData game = gameDataAccess.createGame(request.gameName());
         return new CreateResult(game.gameID());
     }
 
     public JoinResult join(JoinRequest request) throws DataAccessException {
+        nullCheckRequest(request);
         AuthData auth = authenticate(request.authToken());
         gameDataAccess.joinGame(request.playerColor(), request.gameID(), auth.username());
         return new JoinResult();

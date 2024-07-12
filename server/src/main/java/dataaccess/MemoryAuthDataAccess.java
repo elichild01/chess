@@ -9,13 +9,6 @@ public class MemoryAuthDataAccess implements AuthDataAccess {
     final private HashSet<AuthData> auths = new HashSet<>();
 
     public AuthData createAuth(String username) throws DataAccessException {
-        // check if user already logged in
-        for (AuthData currAuth : auths) {
-            if (currAuth.username().equals(username)) {
-                throw new DataAccessException("User already logged in.");
-            }
-        }
-
         // generate AuthData with unique new authToken
         AuthData proposedAuth;
         do {

@@ -120,9 +120,9 @@ public class Server {
 
     private Object create(Request req, Response res) throws DataAccessException {
         String authToken = req.headers("authorization");
-        String gameName = new Gson().fromJson(req.body(), String.class);
+        CreateRequest request = new Gson().fromJson(req.body(), CreateRequest.class);
 
-        CreateRequest request = new CreateRequest(authToken, gameName);
+        request = new CreateRequest(authToken, request.gameName());
         CreateResult result = gameService.create(request);
         res.status(successStatus);
         return new Gson().toJson(result);

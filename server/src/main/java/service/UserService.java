@@ -39,8 +39,8 @@ public class UserService extends Service {
         nullCheck(request.password());
 
         // check for wrong username/password combo
-        UserData user = this.userDataAccess.getUser(request.username());
-        if (user == null || !user.password().equals(request.password())) {
+        UserData user = this.userDataAccess.getUser(request.username(), request.password());
+        if (user == null) {
             throw new DataAccessException("unauthorized");
         }
 

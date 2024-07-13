@@ -14,7 +14,6 @@ public class Server {
     private final GameService gameService;
     private final UserService userService;
     private final ClearService clearService;
-    //    private final WebSocketHandler webSocketHandler;
     int successStatus = 200;
     DatabaseType currDatabaseType = DatabaseType.MEMORY;
 
@@ -28,15 +27,19 @@ public class Server {
         AuthDataAccess authDataAccess;
         GameDataAccess gameDataAccess;
 
-        if (currDatabaseType == DatabaseType.MEMORY) {
-            userDataAccess = new MemoryUserDataAccess();
-            authDataAccess = new MemoryAuthDataAccess();
-            gameDataAccess = new MemoryGameDataAccess();
-        }
-        else {
-            userDataAccess = null;
-            authDataAccess = null;
-            gameDataAccess = null;
+        switch (currDatabaseType) {
+            case MEMORY:
+                userDataAccess = new MemoryUserDataAccess();
+                authDataAccess = new MemoryAuthDataAccess();
+                gameDataAccess = new MemoryGameDataAccess();
+                break;
+            case SQL: // I promise this is not dead code but future compatibility.
+                userDataAccess = null;
+                authDataAccess = null;
+                gameDataAccess = null;
+                break;
+            default:
+                throw new RuntimeException("Database type not supported.");
         }
 
         this.userService = new UserService(userDataAccess, authDataAccess);
@@ -48,7 +51,6 @@ public class Server {
         this.userService = userService;
         this.gameService = gameService;
         this.clearService = clearService;
-//        webSocketHandler = new WebSocketHandler();
     }
 
     public int run(int desiredPort) {

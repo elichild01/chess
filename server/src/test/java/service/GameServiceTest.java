@@ -62,12 +62,12 @@ public class GameServiceTest {
         ListResult result = service.list(request);
 
         assertNotNull(result);
-        assertEquals(0, result.gameList().size());
+        assertEquals(0, result.games().size());
         String gameName = "Math";
         gameDAOInstance.createGame(gameName);
         result = service.list(request);
-        assertEquals(1, result.gameList().size());
-        assertEquals(gameName, service.list(request).gameList().toArray(new GameData[0])[0].gameName());
+        assertEquals(1, result.games().size());
+        assertEquals(gameName, service.list(request).games().toArray(new GameData[0])[0].gameName());
     }
     @ParameterizedTest
     @MethodSource("dataAccessTypes")

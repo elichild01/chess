@@ -12,10 +12,9 @@ public abstract class Service {
     }
 
     protected AuthData authenticate(String authToken) throws DataAccessException {
-        if (authToken == null) {
-            throw new DataAccessException("bad request");
-        }
-        AuthData auth = authDataAccess.getAuth(authToken);
+        nullCheck(authToken);
+
+        AuthData auth = authDataAccess.retrieveAuth(authToken);
         if (auth == null) {
             throw new DataAccessException("unauthorized");
         }

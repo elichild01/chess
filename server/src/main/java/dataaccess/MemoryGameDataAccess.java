@@ -12,12 +12,12 @@ public class MemoryGameDataAccess implements GameDataAccess {
     final private HashMap<Integer, GameData> games = new HashMap<>();
 
     public GameData createGame(String gameName) {
-        String whiteUsername = null;
-        String blackUsername = null;
+        // prepare fields for new GameData
         int gameID = nextId++;
         ChessGame game = new ChessGame();
 
-        GameData gameData = new GameData(gameID, whiteUsername, blackUsername, gameName, game);
+        // create, store, return new GameData
+        GameData gameData = new GameData(gameID, null, null, gameName, game);
         games.put(gameID, gameData);
         return gameData;
     }
@@ -31,14 +31,19 @@ public class MemoryGameDataAccess implements GameDataAccess {
     }
 
     public void joinGame(ChessGame.TeamColor color, int gameID, String username) throws DataAccessException {
+        // retrieve game if it exists
         GameData game = games.get(gameID);
         if (game == null) {
             throw new DataAccessException("bad request");
         }
+
+        // check if place already taken
         String userToReplace = color == ChessGame.TeamColor.WHITE ? game.whiteUsername() : game.blackUsername();
         if (userToReplace != null && !userToReplace.isEmpty()) {
             throw new DataAccessException("already taken");
         }
+
+        // update game with username joined
         GameData updatedGame;
         if (color == ChessGame.TeamColor.WHITE) {
             updatedGame = new GameData(gameID, username, game.blackUsername(), game.gameName(), game.game());

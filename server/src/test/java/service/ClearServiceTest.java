@@ -22,25 +22,25 @@ public class ClearServiceTest {
     // register
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    public void clear(Class<? extends UserDataAccess> userDAOClass, Class<? extends AuthDataAccess> authDAOClass,
-                      Class<? extends GameDataAccess> gameDAOClass) throws Exception {
-        var userDAOInstance = userDAOClass.getDeclaredConstructor().newInstance();
-        var authDAOInstance = authDAOClass.getDeclaredConstructor().newInstance();
-        var gameDAOInstance = gameDAOClass.getDeclaredConstructor().newInstance();
+    public void clear(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass,
+                      Class<? extends GameDataAccess> gameDataAccessClass) throws Exception {
+        var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
+        var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
+        var gameDataAccess = gameDataAccessClass.getDeclaredConstructor().newInstance();
 
-        userDAOInstance.addUser(new UserData("cosmo", "the", "Cougar"));
-        authDAOInstance.createAuth("cosmo");
-        gameDAOInstance.createGame("Cosmo's Game.");
+        userDataAccess.addUser(new UserData("cosmo", "the", "Cougar"));
+        authDataAccess.createAuth("cosmo");
+        gameDataAccess.createGame("Cosmo's Game.");
 
-        assertNotEquals(0, userDAOInstance.getNumUsers());
-        assertNotEquals(0, authDAOInstance.getNumAuths());
-        assertNotEquals(0, userDAOInstance.getNumUsers());
+        assertNotEquals(0, userDataAccess.getNumUsers());
+        assertNotEquals(0, authDataAccess.retrieveNumAuths());
+        assertNotEquals(0, userDataAccess.getNumUsers());
 
-        ClearService service = new ClearService(userDAOInstance, authDAOInstance, gameDAOInstance);
+        ClearService service = new ClearService(userDataAccess, authDataAccess, gameDataAccess);
         service.clear();
 
-        assertEquals(0, userDAOInstance.getNumUsers());
-        assertEquals(0, authDAOInstance.getNumAuths());
-        assertEquals(0, userDAOInstance.getNumUsers());
+        assertEquals(0, userDataAccess.getNumUsers());
+        assertEquals(0, authDataAccess.retrieveNumAuths());
+        assertEquals(0, userDataAccess.getNumUsers());
     }
 }

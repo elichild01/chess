@@ -17,18 +17,13 @@ public class MemoryUserDataAccess implements UserDataAccess {
         users.put(nextId++, user);
     }
 
-    public UserData getUser(String username) throws DataAccessException {
-        UserData userToReturn = null;
-        for (UserData currUser : users.values()) {
-            if (currUser.username().equals(username)) {
-                if (userToReturn != null) {
-                    throw new DataAccessException("More than one user with same username found.");
-                } else {
-                    userToReturn = currUser;
-                }
+    public UserData getUser(String username) {
+        for (UserData user : users.values()) {
+            if (user.username().equals(username)) {
+                return user;
             }
         }
-        return userToReturn;
+        return null;
     }
 
     public void deleteAllUsers() {

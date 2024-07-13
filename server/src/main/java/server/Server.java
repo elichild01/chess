@@ -32,7 +32,8 @@ public class Server {
             userDataAccess = new MemoryUserDataAccess();
             authDataAccess = new MemoryAuthDataAccess();
             gameDataAccess = new MemoryGameDataAccess();
-        } else {
+        }
+        else {
             userDataAccess = null;
             authDataAccess = null;
             gameDataAccess = null;

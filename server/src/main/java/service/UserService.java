@@ -17,14 +17,13 @@ public class UserService extends Service {
 
     public RegisterResult register(RegisterRequest request) throws DataAccessException {
         nullCheck(request);
-        // add user (exception raised iff username already in use
-        if (request.username() == null || request.password() == null || request.email() == null) {
-            throw new DataAccessException("bad request");
-        }
+        nullCheck(request.username());
+        nullCheck(request.password());
+        nullCheck(request.email());
+
         UserData newUser = new UserData(request.username(), request.password(), request.email());
         userDataAccess.addUser(newUser);
 
-        // create auth
         AuthData newAuth = authDataAccess.createAuth(request.username());
 
         return new RegisterResult(request.username(), newAuth.authToken());
@@ -36,19 +35,24 @@ public class UserService extends Service {
 
     public LoginResult login(LoginRequest request) throws DataAccessException {
         nullCheck(request);
-        if (request.username() == null) {
-            throw new DataAccessException("bad request");
-        }
+        nullCheck(request.username());
+        nullCheck(request.password());
+
+        // check for wrong username/password combo
         UserData user = this.userDataAccess.getUser(request.username());
         if (user == null || !user.password().equals(request.password())) {
             throw new DataAccessException("unauthorized");
         }
+
+        // perform log-in
         AuthData auth = this.authDataAccess.createAuth(user.username());
         return new LoginResult(user.username(), auth.authToken());
     }
 
     public LogoutResult logout(LogoutRequest request) throws DataAccessException {
-//        nullCheck(request);
+        nullCheck(request);
+
+        // perform log-out
         authenticate(request.authToken());
         authDataAccess.deleteAuth(request.authToken());
         return new LogoutResult();

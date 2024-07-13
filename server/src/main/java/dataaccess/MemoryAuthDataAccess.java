@@ -20,7 +20,7 @@ public class MemoryAuthDataAccess implements AuthDataAccess {
         return proposedAuth;
     }
 
-    public AuthData getAuth(String authToken) {
+    public AuthData retrieveAuth(String authToken) {
         for (AuthData currAuth : auths) {
             if (currAuth.authToken().equals(authToken)) {
                 return currAuth;
@@ -37,7 +37,7 @@ public class MemoryAuthDataAccess implements AuthDataAccess {
         auths.clear();
     }
 
-    public int getNumAuths() {
+    public int retrieveNumAuths() {
         return auths.size();
     }
 }

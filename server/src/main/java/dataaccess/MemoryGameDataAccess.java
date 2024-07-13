@@ -12,8 +12,8 @@ public class MemoryGameDataAccess implements GameDataAccess {
     final private HashMap<Integer, GameData> games = new HashMap<>();
 
     public GameData createGame(String gameName) {
-        String whiteUsername = "";
-        String blackUsername = "";
+        String whiteUsername = null;
+        String blackUsername = null;
         int gameID = nextId++;
         ChessGame game = new ChessGame();
 

@@ -16,7 +16,7 @@ public class UserService extends Service {
     }
 
     public RegisterResult register(RegisterRequest request) throws DataAccessException {
-        nullCheckRequest(request);
+        nullCheck(request);
         // add user (exception raised iff username already in use
         if (request.username() == null || request.password() == null || request.email() == null) {
             throw new DataAccessException("bad request");
@@ -35,7 +35,7 @@ public class UserService extends Service {
     }
 
     public LoginResult login(LoginRequest request) throws DataAccessException {
-        nullCheckRequest(request);
+        nullCheck(request);
         if (request.username() == null) {
             throw new DataAccessException("bad request");
         }
@@ -48,7 +48,7 @@ public class UserService extends Service {
     }
 
     public LogoutResult logout(LogoutRequest request) throws DataAccessException {
-//        nullCheckRequest(request);
+//        nullCheck(request);
         authenticate(request.authToken());
         authDataAccess.deleteAuth(request.authToken());
         return new LogoutResult();

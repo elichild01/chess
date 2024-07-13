@@ -22,8 +22,8 @@ public abstract class Service {
         return auth;
     }
 
-    protected void nullCheckRequest(Record request) throws DataAccessException {
-        if (request == null) {
+    protected void nullCheck(Object obj) throws DataAccessException {
+        if (obj == null) {
             throw new DataAccessException("bad request");
         }
     }

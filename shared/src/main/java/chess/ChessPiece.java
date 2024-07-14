@@ -128,24 +128,33 @@ public class ChessPiece {
                 if (vdir != 0 && hdir != 0 && pType == PieceType.ROOK) { continue; }
                 if ((vdir == 0 || hdir == 0) && pType == PieceType.BISHOP) { continue; }
 
-                // Go as far as we can go in current direction
-                ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir, myPosition.getColumn()+hdir);
-                boolean stopped = false;
-                while (!stopped) {
-                    if (currPosition.isOffBoard()) { break; }
-                    ChessPiece localInhabitant = board.getPiece(currPosition);
-                    if (localInhabitant != null) {
-                        if (localInhabitant.getTeamColor() == color) { break; }
-                        else { stopped = true; }
-                    }
-                    // Adds the current position to list
-                    ChessMove newMove = new ChessMove(myPosition, currPosition, null);
-                    validMoves.add(newMove);
-                    currPosition = new ChessPosition(currPosition.getRow()+vdir, currPosition.getColumn()+hdir);
-                }
+                seeHowFarWeCanGo(board, myPosition, vdir, hdir, validMoves);
             }
         }
         return validMoves;
+    }
+
+    private void seeHowFarWeCanGo(ChessBoard board, ChessPosition myPosition, int vdir, int hdir,
+                                                   Collection<ChessMove> validMoves) {
+        boolean stopped = false;
+        ChessPosition currPosition = new ChessPosition(myPosition.getRow()+vdir, myPosition.getColumn()+hdir);
+        while (!stopped) {
+            if (currPosition.isOffBoard()) {
+                break;
+            }
+            ChessPiece localInhabitant = board.getPiece(currPosition);
+            if (localInhabitant != null) {
+                if (localInhabitant.getTeamColor() == color) {
+                    break;
+                } else {
+                    stopped = true;
+                }
+            }
+            // Adds the current position to list
+            ChessMove newMove = new ChessMove(myPosition, currPosition, null);
+            validMoves.add(newMove);
+            currPosition = new ChessPosition(currPosition.getRow() + vdir, currPosition.getColumn() + hdir);
+        }
     }
 
     private Collection<ChessMove> calcKnightMoves(ChessBoard board, ChessPosition myPosition) {
@@ -230,8 +239,8 @@ public class ChessPiece {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
         ChessPiece that = (ChessPiece) o;
         return color == that.color && pType == that.pType;
     }

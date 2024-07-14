@@ -23,7 +23,8 @@ public class UserServiceTest {
     // register
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    public void addSingleUserAddsUser(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    public void addSingleUserAddsUser(Class<? extends UserDataAccess> userDataAccessClass,
+                                      Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
@@ -44,7 +45,8 @@ public class UserServiceTest {
 
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    public void addMultipleUsersGivesMultipleUsers(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    public void addMultipleUsersGivesMultipleUsers(Class<? extends UserDataAccess> userDataAccessClass,
+                                                   Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
@@ -60,7 +62,8 @@ public class UserServiceTest {
 
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    public void addDuplicateUsernameThrowsException(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    public void addDuplicateUsernameThrowsException(Class<? extends UserDataAccess> userDataAccessClass,
+                                                    Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
@@ -95,7 +98,8 @@ public class UserServiceTest {
     // login
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    public void loginExistingUser(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    public void loginExistingUser(Class<? extends UserDataAccess> userDataAccessClass,
+                                  Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
@@ -116,7 +120,8 @@ public class UserServiceTest {
 
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    public void loginNonexistentUser(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    public void loginNonexistentUser(Class<? extends UserDataAccess> userDataAccessClass,
+                                     Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
@@ -130,7 +135,8 @@ public class UserServiceTest {
 
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    public void loginWrongPassword(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    public void loginWrongPassword(Class<? extends UserDataAccess> userDataAccessClass,
+                                   Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);

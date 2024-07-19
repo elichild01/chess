@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import dataaccess.UserDataAccess;
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 import requestresult.*;
 
 public class UserService extends Service {
@@ -21,7 +22,9 @@ public class UserService extends Service {
         nullCheck(request.password());
         nullCheck(request.email());
 
-        UserData newUser = new UserData(request.username(), request.password(), request.email());
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
+
+        UserData newUser = new UserData(request.username(), hashedPassword, request.email());
         userDataAccess.addUser(newUser);
 
         AuthData newAuth = authDataAccess.createAuth(request.username());
@@ -38,8 +41,10 @@ public class UserService extends Service {
         nullCheck(request.username());
         nullCheck(request.password());
 
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
+
         // check for wrong username/password combo
-        UserData user = this.userDataAccess.getUser(request.username(), request.password());
+        UserData user = this.userDataAccess.getUser(request.username(), hashedPassword);
         if (user == null) {
             throw new DataAccessException("unauthorized");
         }

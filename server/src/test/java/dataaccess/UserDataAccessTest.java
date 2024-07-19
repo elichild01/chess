@@ -10,7 +10,6 @@ import org.mindrot.jbcrypt.BCrypt;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserDataAccessTest {
-
     private static UserData existingUser;
     private static UserData newUser;
 

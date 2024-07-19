@@ -8,7 +8,10 @@ import java.util.UUID;
 public class MemoryAuthDataAccess implements AuthDataAccess {
     final private HashSet<AuthData> auths = new HashSet<>();
 
-    public AuthData createAuth(String username) {
+    public AuthData createAuth(String username) throws DataAccessException {
+        if (username == null) {
+            throw new DataAccessException("bad request");
+        }
         // generate AuthData with unique new authToken
         AuthData proposedAuth;
         do {

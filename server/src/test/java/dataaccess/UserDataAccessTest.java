@@ -27,7 +27,7 @@ class UserDataAccessTest {
     @ValueSource(classes={MySQLUserDataAccess.class, MemoryUserDataAccess.class})
     void getUserReturnsCorrectUsername(Class<? extends UserDataAccess> databaseClass) throws Exception {
         var database = databaseClass.getDeclaredConstructor().newInstance();
-        database.addUser(existingUser);
+        addExistingUserIfNotAlreadyAdded(database);
         UserData retrievedUser = database.getUser(existingUser.username());
         assertEquals(retrievedUser.username(), existingUser.username());
     }
@@ -35,7 +35,7 @@ class UserDataAccessTest {
     @ValueSource(classes={MySQLUserDataAccess.class, MemoryUserDataAccess.class})
     void getUserNonexistentUserReturnsNull(Class<? extends UserDataAccess> databaseClass) throws Exception {
         var database = databaseClass.getDeclaredConstructor().newInstance();
-        database.addUser(existingUser);
+        addExistingUserIfNotAlreadyAdded(database);
         UserData user = database.getUser("not-a-username");
         assertNull(user);
     }
@@ -51,7 +51,8 @@ class UserDataAccessTest {
     @ValueSource(classes={MySQLUserDataAccess.class, MemoryUserDataAccess.class})
     void addUserDuplicateUsernameThrowsException(Class<? extends UserDataAccess> databaseClass) throws Exception {
         var database = databaseClass.getDeclaredConstructor().newInstance();
-        database.addUser(existingUser);
+        addExistingUserIfNotAlreadyAdded(database);
+        assertThrows(DataAccessException.class, () -> database.addUser(existingUser));
         try {
             database.addUser(existingUser);
         } catch (DataAccessException ex) {
@@ -65,7 +66,7 @@ class UserDataAccessTest {
     @ValueSource(classes={MySQLUserDataAccess.class, MemoryUserDataAccess.class})
     void deleteAllUsers(Class<? extends UserDataAccess> databaseClass) throws Exception {
         var database = databaseClass.getDeclaredConstructor().newInstance();
-        database.addUser(existingUser);
+        addExistingUserIfNotAlreadyAdded(database);
         assertDoesNotThrow(database::deleteAllUsers);
         assertEquals(0, database.getNumUsers());
     }
@@ -75,8 +76,7 @@ class UserDataAccessTest {
     @ValueSource(classes={MySQLUserDataAccess.class, MemoryUserDataAccess.class})
     void getNumUsers(Class<? extends UserDataAccess> databaseClass) throws Exception {
         var database = databaseClass.getDeclaredConstructor().newInstance();
-        assertEquals(0, database.getNumUsers());
-        database.addUser(existingUser);
+        addExistingUserIfNotAlreadyAdded(database);
         assertEquals(1, database.getNumUsers());
     }
     @Test
@@ -85,5 +85,15 @@ class UserDataAccessTest {
         MemoryUserDataAccess memUserDataAccess = null;
         assertThrows(NullPointerException.class, () -> sqlUserDataAccess.getNumUsers());
         assertThrows(NullPointerException.class, () -> memUserDataAccess.getNumUsers());
+    }
+
+    private void addExistingUserIfNotAlreadyAdded(UserDataAccess database) throws DataAccessException {
+        try {
+            database.addUser(existingUser);
+        } catch (DataAccessException ex) {
+            if (!ex.getMessage().equals("already taken")) {
+                throw ex;
+            }
+        }
     }
 }

@@ -31,7 +31,10 @@ public class MySQLUserDataAccess implements UserDataAccess {
     }
 
     public void addUser(UserData user) throws DataAccessException {
-        // FIXME: need to check and ensure user is unique here
+        UserData existingUser = getUser(user.username());
+        if (existingUser != null) {
+            throw new DataAccessException("already taken");
+        }
 
         String statement = "INSERT INTO users (username, hashedpassword, email) VALUES (?, ?, ?)";
         DatabaseManager.executeUpdate(statement, user.username(), user.email(), user.password());

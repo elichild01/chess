@@ -38,7 +38,7 @@ public class MySQLUserDataAccess implements UserDataAccess {
     }
 
     public void deleteAllUsers() throws DataAccessException {
-        String statement = "DELETE * FROM users";
+        String statement = "DELETE FROM users";
         DatabaseManager.executeUpdate(statement);
     }
 

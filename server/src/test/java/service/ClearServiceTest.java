@@ -15,6 +15,7 @@ public class ClearServiceTest {
 
     static Stream<Arguments> dataAccessTypes() {
         return Stream.of(
+                Arguments.of(MySQLUserDataAccess.class, MySQLAuthDataAccess.class, MySQLGameDataAccess.class),
                 Arguments.of(MemoryUserDataAccess.class, MemoryAuthDataAccess.class, MemoryGameDataAccess.class)
         );
     }

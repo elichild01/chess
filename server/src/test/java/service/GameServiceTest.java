@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GameServiceTest {
     static Stream<Arguments> dataAccessTypes() {
         return Stream.of(
+                Arguments.of(MySQLAuthDataAccess.class, MySQLGameDataAccess.class),
                 Arguments.of(MemoryAuthDataAccess.class, MemoryGameDataAccess.class)
         );
     }

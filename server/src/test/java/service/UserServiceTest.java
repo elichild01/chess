@@ -15,8 +15,9 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceTest {
-    static Stream<Arguments> dataAccessTypes() {
+    private static Stream<Arguments> dataAccessTypes() {
         return Stream.of(
+                Arguments.of(MySQLUserDataAccess.class, MySQLAuthDataAccess.class),
                 Arguments.of(MemoryUserDataAccess.class, MemoryAuthDataAccess.class)
         );
     }

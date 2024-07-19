@@ -41,13 +41,15 @@ public class UserService extends Service {
         nullCheck(request.username());
         nullCheck(request.password());
 
-        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
-
         // check for wrong username/password combo
-        UserData user = this.userDataAccess.getUser(request.username(), hashedPassword);
+        UserData user = this.userDataAccess.getUser(request.username());
         if (user == null) {
             throw new DataAccessException("unauthorized");
         }
+        if (!BCrypt.checkpw(request.password(), user.password())) {
+            throw new DataAccessException("unauthorized");
+        }
+
 
         // perform log-in
         AuthData auth = this.authDataAccess.createAuth(user.username());

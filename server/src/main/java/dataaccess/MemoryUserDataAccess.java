@@ -17,9 +17,9 @@ public class MemoryUserDataAccess implements UserDataAccess {
         users.put(nextId++, user);
     }
 
-    public UserData getUser(String username, String password) {
+    public UserData getUser(String username) {
         for (UserData user : users.values()) {
-            if (user.username().equals(username) && user.password().equals(password)) {
+            if (user.username().equals(username)) {
                 return user;
             }
         }

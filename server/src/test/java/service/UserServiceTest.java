@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mindrot.jbcrypt.BCrypt;
 import requestresult.*;
 
 import java.util.stream.Stream;
@@ -106,9 +107,10 @@ public class UserServiceTest {
 
         String username = "go_cougars";
         String password = "white-and-blue";
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         String email = "byufan@byu.edu";
 
-        UserData user = new UserData(username, password, email);
+        UserData user = new UserData(username, hashedPassword, email);
         userDataAccess.addUser(user);
 
         LoginRequest logRequest = new LoginRequest(username, password);
@@ -143,10 +145,11 @@ public class UserServiceTest {
 
         String username = "go_cougars";
         String password = "white-and-blue";
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         String wrongPassword = "white-and-red";
         String email = "byufan@byu.edu";
 
-        UserData user = new UserData(username, password, email);
+        UserData user = new UserData(username, hashedPassword, email);
         userDataAccess.addUser(user);
 
         LoginRequest logRequest = new LoginRequest(username, wrongPassword);

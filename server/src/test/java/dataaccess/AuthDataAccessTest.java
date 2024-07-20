@@ -79,8 +79,8 @@ public class AuthDataAccessTest {
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
 
-        AuthData retrievedAuth = authDataAccess.retrieveAuthByAuthToken(existingAuth.username());
-        assertEquals(retrievedAuth, existingAuth);
+        AuthData retrievedAuth = authDataAccess.retrieveAuthByUsername(existingAuth.username());
+        assertEquals(existingAuth, retrievedAuth);
     }
     @ParameterizedTest
     @ValueSource(classes = {MySQLAuthDataAccess.class, MemoryAuthDataAccess.class})

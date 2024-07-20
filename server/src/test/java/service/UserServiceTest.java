@@ -169,7 +169,7 @@ public class UserServiceTest {
         LogoutResult result = service.logout(new LogoutRequest(auth.authToken()));
         LogoutResult emptyResult = new LogoutResult();
         assertEquals(result, emptyResult);
-        assertNull(authDataAccess.retrieveAuth(auth.authToken()));
+        assertNull(authDataAccess.retrieveAuthByAuthToken(auth.authToken()));
     }
 
     @ParameterizedTest

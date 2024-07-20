@@ -14,7 +14,7 @@ public abstract class Service {
     protected AuthData authenticate(String authToken) throws DataAccessException {
         nullCheck(authToken);
 
-        AuthData auth = authDataAccess.retrieveAuth(authToken);
+        AuthData auth = authDataAccess.retrieveAuthByAuthToken(authToken);
         if (auth == null) {
             throw new DataAccessException("unauthorized");
         }

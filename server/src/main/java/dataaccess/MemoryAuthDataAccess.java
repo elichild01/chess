@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.UUID;
 
 public class MemoryAuthDataAccess implements AuthDataAccess {
-    final private HashSet<AuthData> auths = new HashSet<>();
+    private final HashSet<AuthData> auths = new HashSet<>();
 
     public AuthData createAuth(String username) throws DataAccessException {
         if (username == null) {
@@ -31,9 +31,18 @@ public class MemoryAuthDataAccess implements AuthDataAccess {
         return proposedAuth;
     }
 
-    public AuthData retrieveAuth(String authToken) {
+    public AuthData retrieveAuthByAuthToken(String authToken) {
         for (AuthData currAuth : auths) {
             if (currAuth.authToken().equals(authToken)) {
+                return currAuth;
+            }
+        }
+        return null;
+    }
+
+    public AuthData retrieveAuthByUsername(String username) {
+        for (AuthData currAuth : auths) {
+            if (currAuth.username().equals(username)) {
                 return currAuth;
             }
         }

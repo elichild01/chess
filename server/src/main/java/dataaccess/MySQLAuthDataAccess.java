@@ -19,18 +19,25 @@ public class MySQLAuthDataAccess implements AuthDataAccess {
         AuthData proposedAuth;
         do {
             proposedAuth = new AuthData(UUID.randomUUID().toString(), username);
-        } while (retrieveAuth(proposedAuth.authToken()) != null);
+        } while (retrieveAuthByAuthToken(proposedAuth.authToken()) != null);
 
         int userID = getUserIDFromUsername(username);
 
         // store and return result
         String statement = "INSERT INTO auths (userid, authtoken) VALUES (?, ?)";
-        DatabaseManager.executeUpdate(statement, userID, proposedAuth.authToken());
-
+        try {
+            DatabaseManager.executeUpdate(statement, userID, proposedAuth.authToken());
+        } catch (DataAccessException ex) {
+            if (ex.getMessage().startsWith("unable to update database: INSERT INTO auths (userid, authtoken) VALUES (?, ?), Duplicate entry '")) {
+                throw new DataAccessException("user already logged in");
+            } else {
+                throw ex;
+            }
+        }
         return proposedAuth;
     }
 
-    public AuthData retrieveAuth(String authToken) throws DataAccessException {
+    public AuthData retrieveAuthByAuthToken(String authToken) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             var statement = "SELECT userid, authtoken FROM auths WHERE authtoken=?";
             try (var ps = conn.prepareStatement(statement)) {
@@ -39,6 +46,26 @@ public class MySQLAuthDataAccess implements AuthDataAccess {
                     if (rs.next()) {
                         int userID = rs.getInt("userid");
                         String username = getUsernameFromUserID(userID);
+                        return new AuthData(authToken, username);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+        }
+        return null;
+    }
+
+    public AuthData retrieveAuthByUsername(String username) throws DataAccessException {
+        int userID = getUserIDFromUsername(username);
+
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT userid, authtoken FROM auths WHERE userid=?";
+            try (var ps = conn.prepareStatement(statement)) {
+                ps.setInt(1, userID);
+                try (var rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String authToken = rs.getString("authtoken");
                         return new AuthData(authToken, username);
                     }
                 }

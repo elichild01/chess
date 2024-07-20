@@ -118,7 +118,7 @@ public class UserServiceTest {
         String email = "byufan@byu.edu";
 
         UserData user = new UserData(username, hashedPassword, email);
-        userDataAccess.addUser(user);
+        addUserIfNotAlreadyInDatabase(userDataAccess, user);
 
         LoginRequest logRequest = new LoginRequest(username, password);
         LoginResult logResult = service.login(logRequest);
@@ -157,7 +157,7 @@ public class UserServiceTest {
         String email = "byufan@byu.edu";
 
         UserData user = new UserData(username, hashedPassword, email);
-        userDataAccess.addUser(user);
+        addUserIfNotAlreadyInDatabase(userDataAccess, user);
 
         LoginRequest logRequest = new LoginRequest(username, wrongPassword);
         assertThrows(DataAccessException.class, () -> service.login(logRequest));
@@ -186,5 +186,15 @@ public class UserServiceTest {
 
         LogoutRequest request = new LogoutRequest("Shane");
         assertThrows(DataAccessException.class, () -> service.logout(request));
+    }
+
+    private void addUserIfNotAlreadyInDatabase(UserDataAccess userDataAccess, UserData user) throws DataAccessException {
+        try {
+            userDataAccess.addUser(user);
+        } catch (DataAccessException ex) {
+            if (!ex.getMessage().equals("already taken")) {
+                throw ex;
+            }
+        }
     }
 }

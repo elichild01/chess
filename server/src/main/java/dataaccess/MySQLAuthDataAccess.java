@@ -25,17 +25,7 @@ public class MySQLAuthDataAccess implements AuthDataAccess {
 
         // store and return result
         String statement = "INSERT INTO auths (userid, authtoken) VALUES (?, ?)";
-        try {
-            DatabaseManager.executeUpdate(statement, userID, proposedAuth.authToken());
-        } catch (DataAccessException ex) {
-            if (ex.getMessage().startsWith("unable to update database: INSERT INTO auths (userid, authtoken) VALUES (?, ?), Duplicate entry '")) {
-                AuthData existingAuth = retrieveAuthByUsername(username);
-                deleteAuth(existingAuth.authToken());
-                return createAuth(username);
-            } else {
-                throw ex;
-            }
-        }
+        DatabaseManager.executeUpdate(statement, userID, proposedAuth.authToken());
         return proposedAuth;
     }
 

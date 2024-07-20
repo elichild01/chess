@@ -13,15 +13,6 @@ public class MemoryAuthDataAccess implements AuthDataAccess {
             throw new DataAccessException("bad request");
         }
 
-        // check if user already logged in
-        for (AuthData auth : auths) {
-            if (auth.username().equals(username)) {
-                AuthData existingAuth = retrieveAuthByUsername(username);
-                deleteAuth(existingAuth.authToken());
-                return createAuth(username);
-            }
-        }
-
         // generate AuthData with unique new authToken
         AuthData proposedAuth;
         do {

@@ -15,7 +15,7 @@ public class Server {
     private final UserService userService;
     private final ClearService clearService;
     int successStatus = 200;
-    DatabaseType currDatabaseType = DatabaseType.MEMORY;
+    DatabaseType currDatabaseType = DatabaseType.SQL;
 
     public enum DatabaseType {
         MEMORY,
@@ -23,9 +23,9 @@ public class Server {
     }
 
     public Server() {
-        UserDataAccess userDataAccess;
-        AuthDataAccess authDataAccess;
-        GameDataAccess gameDataAccess;
+        UserDataAccess userDataAccess = null;
+        AuthDataAccess authDataAccess = null;
+        GameDataAccess gameDataAccess = null;
 
         switch (currDatabaseType) {
             case MEMORY:
@@ -33,10 +33,14 @@ public class Server {
                 authDataAccess = new MemoryAuthDataAccess();
                 gameDataAccess = new MemoryGameDataAccess();
                 break;
-            case SQL: // I promise this is not dead code but future compatibility.
-                userDataAccess = null;
-                authDataAccess = null;
-                gameDataAccess = null;
+            case SQL:
+                try {
+                    userDataAccess = new MySQLUserDataAccess();
+                    authDataAccess = new MySQLAuthDataAccess();
+                    gameDataAccess = new MySQLGameDataAccess();
+                } catch (DataAccessException ex) {
+
+                }
                 break;
             default:
                 throw new RuntimeException("Database type not supported.");

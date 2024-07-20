@@ -4,6 +4,7 @@ import chess.ChessGame;
 import dataaccess.*;
 import model.AuthData;
 import model.GameData;
+import model.UserData;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -22,6 +23,13 @@ public class GameServiceTest {
         );
     }
 
+    static Stream<Arguments> dataAccessTypesWithUser() {
+        return Stream.of(
+                Arguments.of(MySQLUserDataAccess.class, MySQLAuthDataAccess.class, MySQLGameDataAccess.class),
+                Arguments.of(MemoryUserDataAccess.class, MemoryAuthDataAccess.class, MemoryGameDataAccess.class)
+        );
+    }
+
     // create
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
@@ -31,7 +39,7 @@ public class GameServiceTest {
         var gameDataAccess = gameDataAccessClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDataAccess, gameDataAccess);
 
-        AuthData auth = null;
+        AuthData auth;
         String presidente = "Presidente";
         try {
             auth = authDataAccess.createAuth(presidente);
@@ -94,22 +102,33 @@ public class GameServiceTest {
 
     // join
     @ParameterizedTest
-    @MethodSource("dataAccessTypes")
-    public void joinGame(Class<? extends AuthDataAccess> authDataAccessClass,
-                             Class<? extends GameDataAccess> gameDataAccessClass) throws Exception {
+    @MethodSource("dataAccessTypesWithUser")
+    public void joinGame(Class<? extends UserDataAccess> userDataAccessClass,
+                         Class<? extends AuthDataAccess> authDataAccessClass,
+                         Class<? extends GameDataAccess> gameDataAccessClass) throws Exception {
+        var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         var gameDataAccess = gameDataAccessClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDataAccess, gameDataAccess);
 
-        GameData game = gameDataAccess.createGame("love");
-        AuthData auth = authDataAccess.createAuth("BYU students");
+        UserData userToJoin = new UserData("BYU students", "sure love their", "ice cream");
+        try {
+            userDataAccess.addUser(userToJoin);
+        } catch (DataAccessException ex) {
+            if (!ex.getMessage().equals("already taken")) {
+                throw ex;
+            }
+        }
+        gameDataAccess.deleteAllGames();
+        GameData game = gameDataAccess.createGame("CONE");
+        AuthData auth = authDataAccess.createAuth(userToJoin.username());
         JoinRequest request = new JoinRequest(auth.authToken(), ChessGame.TeamColor.WHITE, game.gameID());
 
-        assertDoesNotThrow(() -> service.join(request));
+        service.join(request);
         Collection<GameData> allGames = gameDataAccess.listAllGames();
         GameData firstGame = allGames.toArray(new GameData[0])[0];
 
-        assertEquals("BYU students", firstGame.whiteUsername());
+        assertEquals(userToJoin.username(), firstGame.whiteUsername());
     }
     @ParameterizedTest
     @MethodSource("dataAccessTypes")

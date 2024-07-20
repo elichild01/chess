@@ -15,7 +15,7 @@ public class MySQLUserDataAccess implements UserDataAccess {
 
     public UserData getUser(String username) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT username, hashedpassword, email FROM users WHERE username=?";
+            String statement = "SELECT username, hashedpassword, email FROM users WHERE username=?";
             try (var ps = conn.prepareStatement(statement)) {
                 ps.setString(1, username);
                 try (var rs = ps.executeQuery()) {

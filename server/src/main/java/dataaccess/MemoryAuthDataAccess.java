@@ -16,7 +16,9 @@ public class MemoryAuthDataAccess implements AuthDataAccess {
         // check if user already logged in
         for (AuthData auth : auths) {
             if (auth.username().equals(username)) {
-                throw new DataAccessException("user already logged in");
+                AuthData existingAuth = retrieveAuthByUsername(username);
+                deleteAuth(existingAuth.authToken());
+                return createAuth(username);
             }
         }
 

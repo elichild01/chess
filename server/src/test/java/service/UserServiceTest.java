@@ -154,7 +154,6 @@ public class UserServiceTest {
         String password = "white-and-blue";
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         String wrongPassword = "white-and-red";
-        String hashedWrongPassword = BCrypt.hashpw(wrongPassword, BCrypt.gensalt());
         String email = "byufan@byu.edu";
 
         UserData user = new UserData(username, hashedPassword, email);

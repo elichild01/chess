@@ -155,13 +155,17 @@ public class GameServiceTest {
         assertThrows(DataAccessException.class, () -> service.join(request));
     }
     @ParameterizedTest
-    @MethodSource("dataAccessTypes")
-    public void joinSpotAlreadyTakenThrowsException(Class<? extends AuthDataAccess> authDataAccessClass,
-                                            Class<? extends GameDataAccess> gameDataAccessClass) throws Exception {
+    @MethodSource("dataAccessTypesWithUser")
+    public void joinSpotAlreadyTakenThrowsException(Class<? extends UserDataAccess> userDataAccessClass,
+                                                    Class<? extends AuthDataAccess> authDataAccessClass,
+                                                    Class<? extends GameDataAccess> gameDataAccessClass) throws Exception {
+        var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         var gameDataAccess = gameDataAccessClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDataAccess, gameDataAccess);
 
+        userDataAccess.addUser(new UserData("Jimmer", "Jimmer", "Jimmer"));
+        userDataAccess.addUser(new UserData("Fredette", "Fredette", "Fredette"));
         AuthData auth1 = authDataAccess.createAuth("Jimmer");
         AuthData auth2 = authDataAccess.createAuth("Fredette");
         GameData game = gameDataAccess.createGame("every-game-is-Jimmer's-game");

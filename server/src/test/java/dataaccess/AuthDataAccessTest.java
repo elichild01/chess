@@ -40,7 +40,14 @@ public class AuthDataAccessTest {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
 
-        userDataAccess.addUser(newUser);
+        // if newUser is already present due to data persistence, no worries
+        try {
+            userDataAccess.addUser(newUser);
+        } catch (DataAccessException ex) {
+            if (!ex.getMessage().equals("already taken")) {
+                throw ex;
+            }
+        }
         AuthData result = authDataAccess.createAuth(newUser.username());
         assertNotNull(result.authToken());
         assertEquals(newUser.username(), result.username());

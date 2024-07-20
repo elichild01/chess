@@ -24,15 +24,6 @@ public class AuthDataAccessTest {
         );
     }
 
-    // working skeleton
-//    @ParameterizedTest
-//    @MethodSource("dataAccessTypes")
-//    void esqueleto(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
-//        UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
-//        AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
-//        addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
-//    }
-
     // createAuth
     @ParameterizedTest
     @MethodSource("dataAccessTypes")

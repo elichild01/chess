@@ -11,7 +11,10 @@ public class MemoryGameDataAccess implements GameDataAccess {
     private int nextId = 1;
     final private HashMap<Integer, GameData> games = new HashMap<>();
 
-    public GameData createGame(String gameName) {
+    public GameData createGame(String gameName) throws DataAccessException {
+        if (gameName == null) {
+            throw new DataAccessException("bad request");
+        }
         // prepare fields for new GameData
         int gameID = nextId++;
         ChessGame game = new ChessGame();

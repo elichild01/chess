@@ -18,8 +18,8 @@ public class MySQLGameDataAccess implements GameDataAccess {
         // create game in memory and database
         ChessGame game = new ChessGame();
         String gameJSON = new Gson().toJson(game, ChessGame.class);
-        String statement = "INSERT INTO games (gamejson) VALUES (?)";
-        DatabaseManager.executeUpdate(statement, gameJSON);
+        String statement = "INSERT INTO games (gamename, gamejson) VALUES (?, ?)";
+        DatabaseManager.executeUpdate(statement, gameName, gameJSON);
 
         // figure out what gameID was generated (most recent gameID for that gameName)
         int gameID;

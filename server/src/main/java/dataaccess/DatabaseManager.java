@@ -91,8 +91,9 @@ public class DatabaseManager {
             """
             CREATE TABLE IF NOT EXISTS games (
               `gameid` int NOT NULL AUTO_INCREMENT,
-              `whiteuserid` varchar(256) DEFAULT NULL,
-              `blackuserid` varchar(256) DEFAULT NULL,
+              `whiteusername` varchar(256) DEFAULT NULL,
+              `blackusername` varchar(256) DEFAULT NULL,
+              `gamename` varchar(256) NOT NULL,
               `gamejson` TEXT NOT NULL,
               PRIMARY KEY (`gameid`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
@@ -112,7 +113,7 @@ public class DatabaseManager {
         }
     }
 
-    static int executeUpdate(String statement, Object... params) throws DataAccessException {
+    static void executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (var i = 0; i < params.length; i++) {
@@ -120,18 +121,11 @@ public class DatabaseManager {
                     switch (param) {
                         case String p -> ps.setString(i + 1, p);
                         case Integer p -> ps.setInt(i + 1, p);
-//                        case ChessGame p -> ps.setString(i + 1, p.toString());
                         case null -> ps.setNull(i + 1, NULL);
                         default -> {}
                     }
                 }
                 ps.executeUpdate();
-
-                var rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-                return 0;
             }
         } catch (SQLException e) {
             throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));

@@ -2,6 +2,7 @@ package dataaccess;
 
 import chess.ChessGame;
 import model.GameData;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -11,6 +12,11 @@ import java.util.Collection;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GameDataAccessTest {
+
+    @BeforeAll
+    static void init() {
+        new GameDataAccessTest();
+    }
 
     // createGame
     @ParameterizedTest

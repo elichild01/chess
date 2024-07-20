@@ -27,22 +27,26 @@ public class UserServiceTest {
     @MethodSource("dataAccessTypes")
     public void addSingleUserAddsUser(Class<? extends UserDataAccess> userDataAccessClass,
                                       Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
-        var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
-        var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
+        UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
+        AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
+
         String username = "test";
         String password = "password";
         String email = "test@test.com";
         RegisterRequest request = new RegisterRequest(username, password, email);
+        int beforeNumUsers = userDataAccess.getNumUsers();
+
         RegisterResult result = null;
         try {
             result = service.register(request);
         } catch (DataAccessException e) {
             fail(String.format("DataAccessException: %s", e.getMessage()));
         }
+
         assertEquals(username, result.username());
         assertNotNull(result.authToken());
-        assertEquals(1, service.getNumUsers());
+        assertEquals(beforeNumUsers + 1, service.getNumUsers());
     }
 
     @ParameterizedTest
@@ -51,6 +55,8 @@ public class UserServiceTest {
                                                    Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         var userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
+        userDataAccess.deleteAllUsers();
+        authDataAccess.deleteAllAuths();
         UserService service = new UserService(userDataAccess, authDataAccess);
 
         String[] usernames = {"Alice", "Bob", "Charlie"};

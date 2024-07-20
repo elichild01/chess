@@ -31,7 +31,17 @@ public class GameServiceTest {
         var gameDataAccess = gameDataAccessClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDataAccess, gameDataAccess);
 
-        AuthData auth = authDataAccess.createAuth("Presidente");
+        AuthData auth = null;
+        String presidente = "Presidente";
+        try {
+            auth = authDataAccess.createAuth(presidente);
+        } catch (DataAccessException ex) {
+            if (ex.getMessage().equals("user already logged in")) {
+                auth = authDataAccess.retrieveAuthByUsername(presidente);
+            } else {
+                throw ex;
+            }
+        }
         CreateRequest request = new CreateRequest(auth.authToken(), "'s Juego");
 
         CreateResult result = service.create(request);

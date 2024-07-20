@@ -112,7 +112,7 @@ public class UserServiceTest {
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
 
-        String username = "go_cougars";
+        String username = "go_cougs";
         String password = "white-and-blue";
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         String email = "byufan@byu.edu";
@@ -135,8 +135,8 @@ public class UserServiceTest {
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
 
-        String username = "go_cougars";
-        String password = "white-and-blue";
+        String username = "enter_to_learn";
+        String password = "go_forth_to_serve";
 
         LoginRequest logRequest = new LoginRequest(username, password);
         assertThrows(DataAccessException.class, () -> service.login(logRequest));
@@ -150,10 +150,11 @@ public class UserServiceTest {
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         UserService service = new UserService(userDataAccess, authDataAccess);
 
-        String username = "go_cougars";
+        String username = "i-love-byu";
         String password = "white-and-blue";
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         String wrongPassword = "white-and-red";
+        String hashedWrongPassword = BCrypt.hashpw(wrongPassword, BCrypt.gensalt());
         String email = "byufan@byu.edu";
 
         UserData user = new UserData(username, hashedPassword, email);

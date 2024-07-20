@@ -37,7 +37,7 @@ public class MySQLUserDataAccess implements UserDataAccess {
         }
 
         String statement = "INSERT INTO users (username, hashedpassword, email) VALUES (?, ?, ?)";
-        DatabaseManager.executeUpdate(statement, user.username(), user.email(), user.password());
+        DatabaseManager.executeUpdate(statement, user.username(), user.password(), user.email());
     }
 
     public void deleteAllUsers() throws DataAccessException {

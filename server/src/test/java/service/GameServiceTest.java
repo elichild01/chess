@@ -70,7 +70,7 @@ public class GameServiceTest {
     // list
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    public void listAllGamesReturnsZeroAndOneCorrectly(Class<? extends AuthDataAccess> authDataAccessClass,
+    public void listAllGamesSizeIncrementsCorrectly(Class<? extends AuthDataAccess> authDataAccessClass,
                              Class<? extends GameDataAccess> gameDataAccessClass) throws Exception {
         var authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         var gameDataAccess = gameDataAccessClass.getDeclaredConstructor().newInstance();
@@ -81,12 +81,11 @@ public class GameServiceTest {
         ListResult result = service.list(request);
 
         assertNotNull(result);
-        assertEquals(0, result.games().size());
+        int numGamesBefore = result.games().size();
         String gameName = "Math";
         gameDataAccess.createGame(gameName);
         result = service.list(request);
-        assertEquals(1, result.games().size());
-        assertEquals(gameName, service.list(request).games().toArray(new GameData[0])[0].gameName());
+        assertEquals(numGamesBefore + 1, result.games().size());
     }
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
@@ -112,13 +111,8 @@ public class GameServiceTest {
         GameService service = new GameService(authDataAccess, gameDataAccess);
 
         UserData userToJoin = new UserData("BYU students", "sure love their", "ice cream");
-        try {
-            userDataAccess.addUser(userToJoin);
-        } catch (DataAccessException ex) {
-            if (!ex.getMessage().equals("already taken")) {
-                throw ex;
-            }
-        }
+        addUserIfNotAlreadyInDatabase(userDataAccess, userToJoin);
+
         gameDataAccess.deleteAllGames();
         GameData game = gameDataAccess.createGame("CONE");
         AuthData auth = authDataAccess.createAuth(userToJoin.username());
@@ -164,8 +158,8 @@ public class GameServiceTest {
         var gameDataAccess = gameDataAccessClass.getDeclaredConstructor().newInstance();
         GameService service = new GameService(authDataAccess, gameDataAccess);
 
-        userDataAccess.addUser(new UserData("Jimmer", "Jimmer", "Jimmer"));
-        userDataAccess.addUser(new UserData("Fredette", "Fredette", "Fredette"));
+        addUserIfNotAlreadyInDatabase(userDataAccess, new UserData("Jimmer", "Jimmer", "Jimmer"));
+        addUserIfNotAlreadyInDatabase(userDataAccess, new UserData("Fredette", "Fredette", "Fredette"));
         AuthData auth1 = authDataAccess.createAuth("Jimmer");
         AuthData auth2 = authDataAccess.createAuth("Fredette");
         GameData game = gameDataAccess.createGame("every-game-is-Jimmer's-game");
@@ -173,5 +167,15 @@ public class GameServiceTest {
         JoinRequest request2 = new JoinRequest(auth2.authToken(), ChessGame.TeamColor.WHITE, game.gameID());
         assertDoesNotThrow(() -> service.join(request1));
         assertThrows(DataAccessException.class, () -> service.join(request2));
+    }
+
+    private void addUserIfNotAlreadyInDatabase(UserDataAccess userDataAccess, UserData userData) throws DataAccessException {
+        try {
+            userDataAccess.addUser(userData);
+        } catch (DataAccessException ex) {
+            if (!ex.getMessage().equals("already taken")) {
+                throw ex;
+            }
+        }
     }
 }

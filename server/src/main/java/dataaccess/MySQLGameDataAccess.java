@@ -19,21 +19,7 @@ public class MySQLGameDataAccess implements GameDataAccess {
         ChessGame game = new ChessGame();
         String gameJSON = new Gson().toJson(game, ChessGame.class);
         String statement = "INSERT INTO games (gamename, gamejson) VALUES (?, ?)";
-        DatabaseManager.executeUpdate(statement, gameName, gameJSON);
-
-        // figure out what gameID was generated (most recent gameID for that gameName)
-        int gameID;
-        try (var conn = DatabaseManager.getConnection()) {
-            String query = "SELECT gameid FROM games WHERE gamename=? ORDER BY gameid DESC";
-            try (var ps = conn.prepareStatement(query)) {
-                ps.setString(1, gameName);
-                try (var rs = ps.executeQuery()) {
-                    gameID = rs.getInt("gameid");
-                }
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
-        }
+        int gameID = DatabaseManager.executeUpdate(statement, gameName, gameJSON);
 
         // return results
         return new GameData(gameID, null, null, gameName, game);

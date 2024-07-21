@@ -86,7 +86,7 @@ public class DatabaseTests {
         TestUser user = new TestUser("ExistingUser", clearTextPassword, "eu@mail.com");
         serverFacade.register(user);
 
-        try (Connection conn = getConnection()) {
+        try (Connection conn = getConnection();) {
             try (Statement statement = conn.createStatement()) {
                 for (String table : getTables(conn)) {
                     String sql = "SELECT * FROM " + table;
@@ -120,7 +120,7 @@ public class DatabaseTests {
 
     private int getDatabaseRows() {
         int rows = 0;
-        try (Connection conn = getConnection()) {
+        try (Connection conn = getConnection();) {
             try (var statement = conn.createStatement()) {
                 for (String table : getTables(conn)) {
                     var sql = "SELECT count(*) FROM " + table;

@@ -18,7 +18,9 @@ public class DatabaseManager {
     static {
         try {
             try (var propStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("db.properties")) {
-                if (propStream == null) throw new Exception("Unable to load db.properties");
+                if (propStream == null) {
+                    throw new Exception("Unable to load db.properties");
+                }
                 Properties props = new Properties();
                 props.load(propStream);
                 DATABASE_NAME = props.getProperty("db.name");
@@ -71,7 +73,7 @@ public class DatabaseManager {
         }
     }
 
-    private static final String[] createStatements = {
+    private static final String[] CREATE_STATEMENTS = {
             """
             CREATE TABLE IF NOT EXISTS users (
               `userid` int NOT NULL AUTO_INCREMENT,
@@ -104,7 +106,7 @@ public class DatabaseManager {
     static void configureDatabase() throws DataAccessException {
         createDatabase();
         try (var conn = getConnection()) {
-            for (var statement : createStatements) {
+            for (var statement : CREATE_STATEMENTS) {
                 try (var preparedStatement = conn.prepareStatement(statement)) {
                     preparedStatement.executeUpdate();
                 }
@@ -117,26 +119,29 @@ public class DatabaseManager {
     static int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
-                for (var i = 0; i < params.length; i++) {
-                    var param = params[i];
-                    switch (param) {
-                        case String p -> ps.setString(i + 1, p);
-                        case Integer p -> ps.setInt(i + 1, p);
-//                        case ChessGame p -> ps.setString(i + 1, p.toString());
-                        case null -> ps.setNull(i + 1, NULL);
-                        default -> {}
-                    }
-                }
-                ps.executeUpdate();
-
-                var rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-                return 0;
+                return processParams(ps, params);
             }
         } catch (SQLException e) {
             throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
         }
+    }
+
+    private static int processParams(PreparedStatement ps, Object... params) throws SQLException {
+        for (var i = 0; i < params.length; i++) {
+            var param = params[i];
+            switch (param) {
+                case String p -> ps.setString(i + 1, p);
+                case Integer p -> ps.setInt(i + 1, p);
+                case null -> ps.setNull(i + 1, NULL);
+                default -> {}
+            }
+        }
+        ps.executeUpdate();
+
+        var rs = ps.getGeneratedKeys();
+        if (rs.next()) {
+            return rs.getInt(1);
+        }
+        return 0;
     }
 }

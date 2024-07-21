@@ -12,10 +12,9 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AuthDataAccessTest {
-    private static final UserData existingUser = new UserData("existingUsername", "existingHashedPassword", "existingEmail");
+    private static final UserData EXISTING_USER = new UserData("existingUsername", "existingHashedPassword", "existingEmail");
     private static AuthData existingAuth = null;
-    private static final UserData newUser = new UserData("newUsername", "newHashedPassword", "newEmail");
-
+    private static final UserData NEW_USER = new UserData("newUsername", "newHashedPassword", "newEmail");
 
     private static Stream<Arguments> dataAccessTypes() {
         return Stream.of(
@@ -27,21 +26,22 @@ public class AuthDataAccessTest {
     // createAuth
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    void createAuthNormal(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    void createAuthNormal(Class<? extends UserDataAccess> userDataAccessClass,
+                          Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
 
         // if newUser is already present due to data persistence, no worries
         try {
-            userDataAccess.addUser(newUser);
+            userDataAccess.addUser(NEW_USER);
         } catch (DataAccessException ex) {
             if (!ex.getMessage().equals("already taken")) {
                 throw ex;
             }
         }
-        AuthData result = authDataAccess.createAuth(newUser.username());
+        AuthData result = authDataAccess.createAuth(NEW_USER.username());
         assertNotNull(result.authToken());
-        assertEquals(newUser.username(), result.username());
+        assertEquals(NEW_USER.username(), result.username());
     }
     @ParameterizedTest
     @ValueSource(classes = {MySQLAuthDataAccess.class, MemoryAuthDataAccess.class})
@@ -53,7 +53,8 @@ public class AuthDataAccessTest {
     // retrieveAuthByAuthToken
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    void retrieveAuthByAuthTokenNormal(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    void retrieveAuthByAuthTokenNormal(Class<? extends UserDataAccess> userDataAccessClass,
+                                       Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
@@ -72,7 +73,8 @@ public class AuthDataAccessTest {
     // retrieveAuthByUsername
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    void retrieveAuthByUsernameNormal(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    void retrieveAuthByUsernameNormal(Class<? extends UserDataAccess> userDataAccessClass,
+                                      Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
@@ -91,7 +93,8 @@ public class AuthDataAccessTest {
     // deleteAuth
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    void deleteAuthNormal(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    void deleteAuthNormal(Class<? extends UserDataAccess> userDataAccessClass,
+                          Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
@@ -105,7 +108,8 @@ public class AuthDataAccessTest {
     }
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    void deleteNonexistentAuthDoesNotDelete(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    void deleteNonexistentAuthDoesNotDelete(Class<? extends UserDataAccess> userDataAccessClass,
+                                            Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
@@ -119,7 +123,8 @@ public class AuthDataAccessTest {
     // deleteAllAuths
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    void deleteAllAuthsNormal(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    void deleteAllAuthsNormal(Class<? extends UserDataAccess> userDataAccessClass,
+                              Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
@@ -134,7 +139,8 @@ public class AuthDataAccessTest {
     // retrieveNumAuths
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    void retrieveNumAuthsAtLeastOne(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    void retrieveNumAuthsAtLeastOne(Class<? extends UserDataAccess> userDataAccessClass,
+                                    Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
@@ -143,7 +149,8 @@ public class AuthDataAccessTest {
     }
     @ParameterizedTest
     @MethodSource("dataAccessTypes")
-    void retrieveNumAuthsNoAuths(Class<? extends UserDataAccess> userDataAccessClass, Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
+    void retrieveNumAuthsNoAuths(Class<? extends UserDataAccess> userDataAccessClass,
+                                 Class<? extends AuthDataAccess> authDataAccessClass) throws Exception {
         UserDataAccess userDataAccess = userDataAccessClass.getDeclaredConstructor().newInstance();
         AuthDataAccess authDataAccess = authDataAccessClass.getDeclaredConstructor().newInstance();
         addExistingUserAuthIfNotPresent(userDataAccess, authDataAccess);
@@ -155,17 +162,17 @@ public class AuthDataAccessTest {
 
     private void addExistingUserAuthIfNotPresent(UserDataAccess userDataAccess, AuthDataAccess authDataAccess) throws DataAccessException {
         try {
-            userDataAccess.addUser(existingUser);
+            userDataAccess.addUser(EXISTING_USER);
         } catch (DataAccessException ex) {
             if (!ex.getMessage().equals("already taken")) {
                 throw ex;
             }
         }
         try {
-            existingAuth = authDataAccess.createAuth(existingUser.username());
+            existingAuth = authDataAccess.createAuth(EXISTING_USER.username());
         } catch (DataAccessException ex) {
             if (ex.getMessage().equals("user already logged in")) {
-                existingAuth = authDataAccess.retrieveAuthByUsername(existingUser.username());
+                existingAuth = authDataAccess.retrieveAuthByUsername(EXISTING_USER.username());
             } else {
                 throw ex;
             }

@@ -86,25 +86,29 @@ public class DatabaseTests {
         TestUser user = new TestUser("ExistingUser", clearTextPassword, "eu@mail.com");
         serverFacade.register(user);
 
-        try (Connection conn = getConnection();) {
+        try (Connection conn = getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 for (String table : getTables(conn)) {
                     String sql = "SELECT * FROM " + table;
-                    try (ResultSet rs = statement.executeQuery(sql)) {
-                        ResultSetMetaData rsmd = rs.getMetaData();
-                        int columnsNumber = rsmd.getColumnCount();
-                        while(rs.next()) {
-                            for(int i = 1; i <= columnsNumber; i++) {
-                                String value = rs.getString(i);
-                                Assertions.assertFalse(value.contains(clearTextPassword),
-                                        "Found clear text password in database");
-                            }
-                        }
-                    }
+                    innerBCryptToAvoidNestingDepth(statement, sql, clearTextPassword);
                 }
             }
         } catch (Exception ex) {
             Assertions.fail("Unable to load database. Are you using dataAccess.DatabaseManager to set your credentials?", ex);
+        }
+    }
+
+    private void innerBCryptToAvoidNestingDepth(Statement statement, String sql, String clearTextPassword) throws Exception {
+        try (ResultSet rs = statement.executeQuery(sql)) {
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int columnsNumber = rsmd.getColumnCount();
+            while(rs.next()) {
+                for(int i = 1; i <= columnsNumber; i++) {
+                    String value = rs.getString(i);
+                    Assertions.assertFalse(value.contains(clearTextPassword),
+                            "Found clear text password in database");
+                }
+            }
         }
     }
 
@@ -120,7 +124,7 @@ public class DatabaseTests {
 
     private int getDatabaseRows() {
         int rows = 0;
-        try (Connection conn = getConnection();) {
+        try (Connection conn = getConnection()) {
             try (var statement = conn.createStatement()) {
                 for (String table : getTables(conn)) {
                     var sql = "SELECT count(*) FROM " + table;
@@ -132,7 +136,8 @@ public class DatabaseTests {
                 }
             }
         } catch (Exception ex) {
-            Assertions.fail("Unable to load database in order to verify persistence. Are you using dataAccess.DatabaseManager to set your credentials?", ex);
+            Assertions.fail(String.format("%s%s", "Unable to load database in order to verify persistence. ",
+                    "Are you using dataAccess.DatabaseManager to set your credentials?"), ex);
         }
 
         return rows;

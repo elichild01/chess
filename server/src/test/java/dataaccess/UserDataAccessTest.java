@@ -44,7 +44,13 @@ class UserDataAccessTest {
     @ValueSource(classes={MySQLUserDataAccess.class, MemoryUserDataAccess.class})
     void addUser(Class<? extends UserDataAccess> databaseClass) throws Exception {
         var database = databaseClass.getDeclaredConstructor().newInstance();
-        assertDoesNotThrow(() -> database.addUser(newUser));
+
+        try {
+            database.addUser(newUser);
+        } catch (DataAccessException ex) {
+            assertEquals("already taken", ex.getMessage());
+        }
+        assertEquals(newUser.username(), database.getUser(newUser.username()).username());
     }
     @ParameterizedTest
     @ValueSource(classes={MySQLUserDataAccess.class, MemoryUserDataAccess.class})

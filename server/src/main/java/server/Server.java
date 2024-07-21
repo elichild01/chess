@@ -23,9 +23,9 @@ public class Server {
     }
 
     public Server() {
-        UserDataAccess userDataAccess = null;
-        AuthDataAccess authDataAccess = null;
-        GameDataAccess gameDataAccess = null;
+        UserDataAccess userDataAccess;
+        AuthDataAccess authDataAccess;
+        GameDataAccess gameDataAccess;
 
         switch (currDatabaseType) {
             case MEMORY:
@@ -39,7 +39,7 @@ public class Server {
                     authDataAccess = new MySQLAuthDataAccess();
                     gameDataAccess = new MySQLGameDataAccess();
                 } catch (DataAccessException ex) {
-
+                    throw new RuntimeException(ex.getMessage());
                 }
                 break;
             default:

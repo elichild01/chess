@@ -126,14 +126,7 @@ public class DatabaseTests {
         int rows = 0;
         try (Connection conn = getConnection()) {
             try (var statement = conn.createStatement()) {
-                for (String table : getTables(conn)) {
-                    var sql = "SELECT count(*) FROM " + table;
-                    try (var resultSet = statement.executeQuery(sql)) {
-                        if (resultSet.next()) {
-                            rows += resultSet.getInt(1);
-                        }
-                    }
-                }
+                innerGetDatabaseRowsToDodgeNestingDepth(conn, statement, rows);
             }
         } catch (Exception ex) {
             Assertions.fail(String.format("%s%s", "Unable to load database in order to verify persistence. ",
@@ -141,6 +134,17 @@ public class DatabaseTests {
         }
 
         return rows;
+    }
+
+    private void innerGetDatabaseRowsToDodgeNestingDepth(Connection conn, Statement statement, int rows) throws Exception {
+        for (String table : getTables(conn)) {
+            var sql = "SELECT count(*) FROM " + table;
+            try (var resultSet = statement.executeQuery(sql)) {
+                if (resultSet.next()) {
+                    rows += resultSet.getInt(1);
+                }
+            }
+        }
     }
 
     private List<String> getTables(Connection conn) throws SQLException {

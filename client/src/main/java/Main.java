@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
+    private static boolean finished;
+
     public static void main(String[] args) {
 //        var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
 //        System.out.println("♕ 240 Chess Client: " + piece);
@@ -13,8 +15,8 @@ public class Main {
         System.out.println("Welcome to Eli's 240 Chess. Type 'help' to get started.");
         Scanner scanner = new Scanner(System.in);
 
-        boolean quit = false;
-        while (!quit) {
+        finished = false;
+        while (!finished) {
             String userOption = scanner.nextLine();
 
             if (Arrays.asList(getUserOptions(state)).contains(userOption)) {
@@ -38,6 +40,8 @@ public class Main {
     }
 
     private static void handleQuit() {
+        System.out.println("Thanks for playing!");
+        finished = true;
     }
 
     private static void handleLogin() {

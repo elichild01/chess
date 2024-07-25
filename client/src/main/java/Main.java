@@ -5,12 +5,12 @@ import java.util.Scanner;
 
 public class Main {
     private static boolean finished;
+    private static AppState state = AppState.PRELOGIN;
 
     public static void main(String[] args) {
 //        var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
 //        System.out.println("♕ 240 Chess Client: " + piece);
 
-        AppState state = AppState.PRELOGIN;
 
         System.out.println("Welcome to Eli's 240 Chess. Type 'help' to get started.");
         Scanner scanner = new Scanner(System.in);
@@ -37,6 +37,26 @@ public class Main {
     }
 
     private static void handleHelp() {
+        String preLoginHelp = """
+                register - register new user
+                login - log in existing user
+                quit - exit chess app
+                help - display this help text
+                """;
+
+        String postLoginHelp = """
+                logout - log out current user
+                create - create new game
+                list - list all current games
+                play - play chess
+                observe - observe chess game without joining
+                help - display this help text
+                """;
+
+        switch (state) {
+            case PRELOGIN -> System.out.print(preLoginHelp);
+            case POSTLOGIN -> System.out.print(postLoginHelp);
+        }
     }
 
     private static void handleQuit() {

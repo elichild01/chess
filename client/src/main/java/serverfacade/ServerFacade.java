@@ -1,9 +1,8 @@
 package serverfacade;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
-import requestresult.LoginResult;
-import requestresult.LogoutResult;
-import requestresult.RegisterResult;
+import requestresult.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,23 +20,22 @@ public class ServerFacade {
     }
 
     public LoginResult login(String username, String password) throws IOException {
+        String requestType = "POST";
         String route = "/session";
-        HttpURLConnection connection = getHTTPPostConnection(route);
+        HttpURLConnection connection = getHTTPConnection(requestType, route, null);
 
-        var body = Map.of("username", username, "password", password);
+        LoginRequest request = new LoginRequest(username, password);
         try (OutputStream requestBody = connection.getOutputStream()) {
-            var jsonBody = new Gson().toJson(body);
+            var jsonBody = new Gson().toJson(request);
             requestBody.write(jsonBody.getBytes());
         }
 
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
             try (InputStream responseBody = connection.getInputStream()) {
                 InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
-                var response = new Gson().fromJson(inputStreamReader, Map.class);
-                String responseUsername = (String)response.get("username");
-                String authToken = (String)response.get("authToken");
-                System.out.printf("Successfully logged in user %s.%n", responseUsername);
-                return new LoginResult(responseUsername, authToken);
+                LoginResult response = new Gson().fromJson(inputStreamReader, LoginResult.class);
+                System.out.printf("Successfully logged in user %s.%n", response.username());
+                return response;
             }
         } else {
             try (InputStream responseBody = connection.getErrorStream()) {
@@ -49,23 +47,22 @@ public class ServerFacade {
     }
 
     public RegisterResult register(String username, String password, String email) throws IOException {
+        String requestType = "POST";
         String route = "/user";
-        HttpURLConnection connection = getHTTPPostConnection(route);
+        HttpURLConnection connection = getHTTPConnection(requestType, route, null);
 
-        var body = Map.of("username", username, "password", password, "email", email);
+        RegisterRequest request = new RegisterRequest(username, password, email);
         try (OutputStream requestBody = connection.getOutputStream()) {
-            var jsonBody = new Gson().toJson(body);
+            var jsonBody = new Gson().toJson(request);
             requestBody.write(jsonBody.getBytes());
         }
 
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
             try (InputStream responseBody = connection.getInputStream()) {
                 InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
-                var response = new Gson().fromJson(inputStreamReader, Map.class);
-                String responseUsername = (String)response.get("username");
-                String authToken = (String)response.get("authToken");
-                System.out.printf("Successfully logged in user %s.%n", responseUsername);
-                return new RegisterResult(responseUsername, authToken);
+                RegisterResult response = new Gson().fromJson(inputStreamReader, RegisterResult.class);
+                System.out.printf("Successfully logged in user %s.%n", response.username());
+                return response;
             }
         } else {
             try (InputStream responseBody = connection.getErrorStream()) {
@@ -102,15 +99,94 @@ public class ServerFacade {
         return new LogoutResult();
     }
 
-    private HttpURLConnection getHTTPPostConnection(String route) throws IOException {
+    public CreateResult create(String authToken, String gameName) throws IOException {
+        String requestType = "POST";
+        String route = "/game";
+        HttpURLConnection connection = getHTTPConnection(requestType, route, authToken);
+
+        CreateRequest request = new CreateRequest(authToken, gameName);
+        try (OutputStream requestBody = connection.getOutputStream()) {
+            var jsonBody = new Gson().toJson(request);
+            requestBody.write(jsonBody.getBytes());
+        }
+
+        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            try (InputStream responseBody = connection.getInputStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                CreateResult response = new Gson().fromJson(inputStreamReader, CreateResult.class);
+                System.out.printf("Successfully created game %s.%n", gameName);
+                return response;
+            }
+        } else {
+            try (InputStream responseBody = connection.getErrorStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                System.out.println(new Gson().fromJson(inputStreamReader, Map.class).get("message"));
+                return new CreateResult(-1);
+            }
+        }
+    }
+
+    public JoinResult join(String authToken, ChessGame.TeamColor playerColor, int gameID) throws IOException {
+        String requestType = "PUT";
+        String route = "/game";
+        HttpURLConnection connection = getHTTPConnection(requestType, route, authToken);
+
+        JoinRequest request = new JoinRequest(authToken, playerColor, gameID);
+        try (OutputStream requestBody = connection.getOutputStream()) {
+            var jsonBody = new Gson().toJson(request);
+            requestBody.write(jsonBody.getBytes());
+        }
+
+        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            try (InputStream responseBody = connection.getInputStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                JoinResult response = new Gson().fromJson(inputStreamReader, JoinResult.class);
+                System.out.println("Successfully joined game.");
+                return response;
+            }
+        } else {
+            try (InputStream responseBody = connection.getErrorStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                System.out.println(new Gson().fromJson(inputStreamReader, Map.class).get("message"));
+                return new JoinResult();
+            }
+        }
+    }
+
+    public ClearResult clear() throws IOException {
+        String requestType = "DELETE";
+        String route = "/db";
+        HttpURLConnection connection = getHTTPConnection(requestType, route, null);
+
+        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            try (InputStream responseBody = connection.getInputStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                ClearResult response = new Gson().fromJson(inputStreamReader, ClearResult.class);
+                System.out.println("Cleared all users, games, and auths.");
+                return response;
+            }
+        } else {
+            try (InputStream responseBody = connection.getErrorStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                System.out.println(new Gson().fromJson(inputStreamReader, Map.class).get("message"));
+                return new ClearResult();
+            }
+        }
+    }
+
+    private HttpURLConnection getHTTPConnection(String httpType, String route, String authToken) throws IOException {
         String urlString = String.format("http://localhost:%d%s", port, route);
         URL url = new URL(urlString);
 
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         connection.setReadTimeout(5000);
-        connection.setRequestMethod("POST");
+        connection.setRequestMethod(httpType);
         connection.setDoOutput(true);
+
+        if (authToken != null) {
+            connection.addRequestProperty("authorization", authToken);
+        }
         connection.connect();
 
         return connection;

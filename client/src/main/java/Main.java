@@ -1,5 +1,6 @@
 import chess.*;
 import requestresult.LoginResult;
+import requestresult.RegisterResult;
 import server.Server;
 import serverfacade.ServerFacade;
 
@@ -10,7 +11,6 @@ import java.util.Scanner;
 public class Main {
     private static boolean finished;
     private static AppState state = AppState.PRELOGIN;
-    private static Server server;
     private static ServerFacade facade;
     private static Scanner scanner;
     private static String authToken;
@@ -18,7 +18,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         // use only for purposes of running locally
-        server = new Server();
+        Server server = new Server();
         int port = server.run(0);
         System.out.println("Started Main HTTP server on " + port);
         facade = new ServerFacade(port);
@@ -91,15 +91,19 @@ public class Main {
         }
     }
 
-    private static void handleRegister() {
-//        System.out.println("Username: ");
-//        String username = scanner.nextLine();
-//        System.out.println("Password: ");
-//        String password = scanner.nextLine();
-//        System.out.println("Email: ");
-//        String email = scanner.nextLine();
-//
-//        facade.register(username, password, email);
+    private static void handleRegister() throws IOException {
+        System.out.println("Username: ");
+        String username = scanner.nextLine();
+        System.out.println("Password: ");
+        String password = scanner.nextLine();
+        System.out.println("Email: ");
+        String email = scanner.nextLine();
+
+        RegisterResult registerResult = facade.register(username, password, email);
+        if (registerResult.authToken() != null) {
+            authToken = registerResult.authToken();
+            state = AppState.POSTLOGIN;
+        }
     }
 
     private static void handleLogout() {

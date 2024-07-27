@@ -2,6 +2,7 @@ package serverfacade;
 
 import chess.ChessGame;
 import com.google.gson.Gson;
+import model.GameData;
 import requestresult.*;
 
 import java.io.IOException;
@@ -10,6 +11,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 public class ServerFacade {
@@ -97,6 +100,26 @@ public class ServerFacade {
             }
         }
         return new LogoutResult();
+    }
+
+    public ListResult list(String authToken) throws IOException {
+        String requestType = "GET";
+        String route = "/game";
+        HttpURLConnection connection = getHTTPConnection(requestType, route, authToken);
+
+        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            try (InputStream responseBody = connection.getInputStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                return new Gson().fromJson(inputStreamReader, ListResult.class);
+            }
+        } else {
+            try (InputStream responseBody = connection.getErrorStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                System.out.println(new Gson().fromJson(inputStreamReader, Map.class).get("message"));
+                Collection<GameData> emptyGameList = new ArrayList<>();
+                return new ListResult(emptyGameList);
+            }
+        }
     }
 
     public CreateResult create(String authToken, String gameName) throws IOException {

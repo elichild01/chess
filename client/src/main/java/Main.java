@@ -1,5 +1,6 @@
 import chess.*;
-import requestresult.CreateResult;
+import model.GameData;
+import requestresult.ListResult;
 import requestresult.LoginResult;
 import requestresult.RegisterResult;
 import server.Server;
@@ -7,6 +8,7 @@ import serverfacade.ServerFacade;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -17,7 +19,7 @@ public class Main {
     private static Scanner scanner;
     private static String authToken;
     private static int currGameID;
-    private static HashMap<Integer, Integer> currGameNumbering;
+    private static HashMap<Integer, Integer> currGameNumbering = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
 
@@ -123,6 +125,15 @@ public class Main {
     }
 
     private static void handleList() throws IOException {
+        ListResult listResult = facade.list(authToken);
+
+        Collection<GameData> games = listResult.games();
+
+        int i = 0;
+        for (GameData game : games) {
+            currGameNumbering.put(i, game.gameID());
+            System.out.printf("%d: %s, ID: %d%n", i++, game.gameName(), game.gameID());
+        }
     }
 
     private static void handlePlay() throws IOException {

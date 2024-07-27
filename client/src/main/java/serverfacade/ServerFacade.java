@@ -2,6 +2,7 @@ package serverfacade;
 
 import com.google.gson.Gson;
 import requestresult.LoginResult;
+import requestresult.LogoutResult;
 import requestresult.RegisterResult;
 
 import java.io.IOException;
@@ -21,7 +22,7 @@ public class ServerFacade {
 
     public LoginResult login(String username, String password) throws IOException {
         String route = "/session";
-        HttpURLConnection connection = getHttpURLConnection(route);
+        HttpURLConnection connection = getHTTPPostConnection(route);
 
         var body = Map.of("username", username, "password", password);
         try (OutputStream requestBody = connection.getOutputStream()) {
@@ -49,7 +50,7 @@ public class ServerFacade {
 
     public RegisterResult register(String username, String password, String email) throws IOException {
         String route = "/user";
-        HttpURLConnection connection = getHttpURLConnection(route);
+        HttpURLConnection connection = getHTTPPostConnection(route);
 
         var body = Map.of("username", username, "password", password, "email", email);
         try (OutputStream requestBody = connection.getOutputStream()) {
@@ -75,7 +76,33 @@ public class ServerFacade {
         }
     }
 
-    private HttpURLConnection getHttpURLConnection(String route) throws IOException {
+    public LogoutResult logout(String authToken) throws IOException {
+        String route = "/session";
+
+        String urlString = String.format("http://localhost:%d%s", port, route);
+        URL url = new URL(urlString);
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        connection.setReadTimeout(5000);
+        connection.setRequestMethod("DELETE");
+        connection.setDoOutput(true);
+
+        connection.addRequestProperty("authorization", authToken);
+        connection.connect();
+
+        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            System.out.println("Successfully logged out.");
+        } else {
+            try (InputStream responseBody = connection.getErrorStream()) {
+                InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
+                System.out.println(new Gson().fromJson(inputStreamReader, Map.class).get("message"));
+            }
+        }
+        return new LogoutResult();
+    }
+
+    private HttpURLConnection getHTTPPostConnection(String route) throws IOException {
         String urlString = String.format("http://localhost:%d%s", port, route);
         URL url = new URL(urlString);
 

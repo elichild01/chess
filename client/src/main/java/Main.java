@@ -106,8 +106,9 @@ public class Main {
         }
     }
 
-    private static void handleLogout() {
-
+    private static void handleLogout() throws IOException {
+        facade.logout(authToken);
+        state = AppState.PRELOGIN;
     }
 
     private static void handleCreate() {

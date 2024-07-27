@@ -1,19 +1,33 @@
 import chess.*;
+import requestresult.LoginResult;
+import server.Server;
+import serverfacade.ServerFacade;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
     private static boolean finished;
     private static AppState state = AppState.PRELOGIN;
+    private static Server server;
+    private static ServerFacade facade;
+    private static Scanner scanner;
+    private static String authToken;
 
-    public static void main(String[] args) {
-//        var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
-//        System.out.println("♕ 240 Chess Client: " + piece);
+    public static void main(String[] args) throws Exception {
 
+        // use only for purposes of running locally
+        server = new Server();
+        int port = server.run(0);
+        System.out.println("Started Main HTTP server on " + port);
+        facade = new ServerFacade(port);
+
+        var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
+        System.out.println("♕ 240 Chess Client: " + piece);
 
         System.out.println("Welcome to Eli's 240 Chess. Type 'help' to get started.");
-        Scanner scanner = new Scanner(System.in);
+        scanner = new Scanner(System.in);
 
         finished = false;
         while (!finished) {
@@ -64,10 +78,28 @@ public class Main {
         finished = true;
     }
 
-    private static void handleLogin() {
+    private static void handleLogin() throws IOException {
+        System.out.println("Username: ");
+        String username = scanner.nextLine();
+        System.out.println("Password: ");
+        String password = scanner.nextLine();
+
+        LoginResult loginResult = facade.login(username, password);
+        if (loginResult.authToken() != null) {
+            authToken = loginResult.authToken();
+            state = AppState.POSTLOGIN;
+        }
     }
 
     private static void handleRegister() {
+//        System.out.println("Username: ");
+//        String username = scanner.nextLine();
+//        System.out.println("Password: ");
+//        String password = scanner.nextLine();
+//        System.out.println("Email: ");
+//        String email = scanner.nextLine();
+//
+//        facade.register(username, password, email);
     }
 
     private static void handleLogout() {

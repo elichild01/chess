@@ -1,4 +1,5 @@
 import chess.*;
+import requestresult.CreateResult;
 import requestresult.LoginResult;
 import requestresult.RegisterResult;
 import server.Server;
@@ -6,6 +7,7 @@ import serverfacade.ServerFacade;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Main {
@@ -14,6 +16,8 @@ public class Main {
     private static ServerFacade facade;
     private static Scanner scanner;
     private static String authToken;
+    private static int currGameID;
+    private static HashMap<Integer, Integer> currGameNumbering;
 
     public static void main(String[] args) throws Exception {
 
@@ -111,23 +115,38 @@ public class Main {
         state = AppState.PRELOGIN;
     }
 
-    private static void handleCreate() {
+    private static void handleCreate() throws IOException {
+        System.out.println("Game name: ");
+        String gameName = scanner.nextLine();
 
+        facade.create(authToken, gameName);
     }
 
-    private static void handleList() {
-
+    private static void handleList() throws IOException {
     }
 
-    private static void handlePlay() {
+    private static void handlePlay() throws IOException {
+        System.out.println("Enter number of the game you would like to join (from most-recently-displayed list): ");
+        int gameNum = scanner.nextInt();
+        System.out.println("Enter color you would like to play as: ");
+        String colorStr = "";
 
+        while (!colorStr.equalsIgnoreCase("WHITE") && !colorStr.equalsIgnoreCase("BLACK")) {
+            System.out.println("Color not recognized. Please enter 'WHITE' or 'BLACK'.");
+            colorStr = scanner.nextLine();
+        }
+        ChessGame.TeamColor playerColor = colorStr.equalsIgnoreCase("WHITE") ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
+        int gameID = currGameNumbering.get(gameNum);
+
+        facade.join(authToken, playerColor, gameID);
     }
 
-    private static void handleObserve() {
+    private static void handleObserve() throws IOException {
 
     }
 
     private static void handleUnrecognizedOption() {
+        System.out.println("Option not recognized. Type 'help' to get started.");
     }
 
     private enum AppState {

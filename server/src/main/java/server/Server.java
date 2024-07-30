@@ -15,7 +15,7 @@ public class Server {
     private final UserService userService;
     private final ClearService clearService;
     int successStatus = 200;
-    DatabaseType currDatabaseType = DatabaseType.MEMORY;
+    DatabaseType currDatabaseType = DatabaseType.SQL;
 
     public enum DatabaseType {
         MEMORY,

@@ -8,9 +8,10 @@ import serverfacade.ServerFacade;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Scanner;
+
+import static ui.EscapeSequences.*;
 
 public class Main {
     private static boolean finished;
@@ -18,11 +19,9 @@ public class Main {
     private static ServerFacade facade;
     private static Scanner scanner;
     private static String authToken;
-    private static int currGameID;
-    private static HashMap<Integer, Integer> currGameNumbering = new HashMap<>();
+    private static HashMap<Integer, GameData> currGameList;
 
     public static void main(String[] args) throws Exception {
-
         // use only for purposes of running locally
         Server server = new Server();
         int port = server.run(0);
@@ -109,6 +108,7 @@ public class Main {
         if (registerResult.authToken() != null) {
             authToken = registerResult.authToken();
             state = AppState.POSTLOGIN;
+            handleHelp();
         }
     }
 
@@ -127,33 +127,40 @@ public class Main {
     private static void handleList() throws IOException {
         ListResult listResult = facade.list(authToken);
 
-        Collection<GameData> games = listResult.games();
-
+        currGameList = new HashMap<>();
         int i = 0;
-        for (GameData game : games) {
-            currGameNumbering.put(i, game.gameID());
+        for (GameData game : listResult.games()) {
+            currGameList.put(i, game);
             System.out.printf("%d: %s, ID: %d%n", i++, game.gameName(), game.gameID());
         }
     }
 
     private static void handlePlay() throws IOException {
-        System.out.println("Enter number of the game you would like to join (from most-recently-displayed list): ");
+        System.out.println("Enter number of the game you would like to join (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
         System.out.println("Enter color you would like to play as: ");
-        String colorStr = "";
+        String colorStr = scanner.nextLine();
 
         while (!colorStr.equalsIgnoreCase("WHITE") && !colorStr.equalsIgnoreCase("BLACK")) {
             System.out.println("Color not recognized. Please enter 'WHITE' or 'BLACK'.");
             colorStr = scanner.nextLine();
         }
         ChessGame.TeamColor playerColor = colorStr.equalsIgnoreCase("WHITE") ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
-        int gameID = currGameNumbering.get(gameNum);
+        GameData game = currGameList.get(gameNum);
 
-        facade.join(authToken, playerColor, gameID);
+        facade.join(authToken, playerColor, game.gameID());
+
+        // proceed to play game
+        drawStartingBoard();
     }
 
     private static void handleObserve() throws IOException {
+        System.out.println("Enter number of the game you would like to observe (from most recently-displayed list): ");
+        int gameNum = scanner.nextInt();
+        GameData game = currGameList.get(gameNum);
 
+        // proceed to observe game
+        drawStartingBoard();
     }
 
     private static void handleUnrecognizedOption() {
@@ -170,5 +177,95 @@ public class Main {
             case PRELOGIN -> new String[]{"help", "quit", "login", "register"};
             case POSTLOGIN -> new String[]{"help", "logout", "create", "list", "play", "observe"};
         };
+    }
+
+    private static void drawStartingBoard() {
+        ChessBoard board = new ChessBoard();
+        board.resetBoard();
+        drawBoards(board);
+    }
+
+    private static void drawBoards(ChessBoard board) {
+        drawBoard(board, false);
+        drawBoard(board, true);
+    }
+
+    private static void drawBoard(ChessBoard board, boolean flip) {
+        String borderBackgroundColor = SET_BG_COLOR_YELLOW;
+        String borderTextColor = SET_TEXT_COLOR_BLACK + SET_TEXT_BOLD;
+
+        // sets directions if this is the first printing of the board or the reverse
+        int firstRow = 1;
+        int lastRow = 8;
+        char firstCol = 'h';
+        char lastCol = 'a';
+        int direction = 1;
+        if (flip) {
+            firstRow = 8;
+            lastRow = 1;
+            firstCol = 'a';
+            lastCol = 'h';
+            direction = -1;
+        }
+
+        // top border
+        printSquare(borderBackgroundColor, "", EMPTY);
+        for (char colChar = firstCol; colChar != lastCol-direction; colChar -= (char) direction) {
+            printSquare(borderBackgroundColor, borderTextColor, String.format(" %s ", colChar));
+        }
+        printSquare(borderBackgroundColor, "", EMPTY);
+        System.out.printf("%s\n", RESET_BG_COLOR);
+
+        // board and left/right borders
+        for (int row = firstRow; row != lastRow+direction; row += direction) {
+            printSquare(borderBackgroundColor, borderTextColor, String.format(" %d ", row));
+            for (int col = firstRow; col != lastRow+direction; col += direction) {
+                String squareColor = (row + col & 1) == 0 ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_BLACK;
+                ChessPiece piece = board.getPiece(new ChessPosition(row, 9-col));
+                String pieceColor = "";
+                String pieceString = EMPTY;
+                if (piece != null) {
+                    pieceColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ? SET_TEXT_COLOR_WHITE : SET_TEXT_COLOR_BLUE;
+                    pieceString = getStringRepresentingPiece(piece);
+                }
+                printSquare(squareColor, pieceColor, pieceString);
+            }
+            printSquare(borderBackgroundColor, borderTextColor, String.format(" %d ", row));
+            System.out.printf("%s\n", RESET_BG_COLOR);
+        }
+
+        // bottom border
+        printSquare(borderBackgroundColor, "", EMPTY);
+        for (char colChar = firstCol; colChar != lastCol-direction; colChar -= (char) direction) {
+            printSquare(borderBackgroundColor, borderTextColor, String.format(" %s ", colChar));
+        }
+        printSquare(borderBackgroundColor, "", EMPTY);
+        System.out.printf("%s\n\n", RESET_BG_COLOR);
+    }
+
+    private static void printSquare(String backgroundColor, String textColor, String character) {
+        System.out.printf("%s%s%s", backgroundColor, textColor, character);
+    }
+
+    private static String getStringRepresentingPiece(ChessPiece piece) {
+        if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+            return switch (piece.getPieceType()) {
+                case KING -> WHITE_KING;
+                case QUEEN -> WHITE_QUEEN;
+                case ROOK -> WHITE_ROOK;
+                case BISHOP -> WHITE_BISHOP;
+                case KNIGHT -> WHITE_KNIGHT;
+                case PAWN -> WHITE_PAWN;
+            };
+        } else {
+            return switch (piece.getPieceType()) {
+                case KING -> BLACK_KING;
+                case QUEEN -> BLACK_QUEEN;
+                case ROOK -> BLACK_ROOK;
+                case BISHOP -> BLACK_BISHOP;
+                case KNIGHT -> BLACK_KNIGHT;
+                case PAWN -> BLACK_PAWN;
+            };
+        }
     }
 }

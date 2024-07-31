@@ -59,6 +59,7 @@ public class ServerFacadeTests {
     }
     @Test
     public void registerExistingUser() throws IOException {
+        facade.register(existingUser.username(), existingUser.password(), existingUser.email());
         var result = facade.register(existingUser.username(), existingUser.password(), existingUser.email());
         assertTrue(result.containsKey("message"));
     }

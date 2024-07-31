@@ -3,13 +3,12 @@ package client;
 import chess.ChessGame;
 import model.UserData;
 import org.junit.jupiter.api.*;
-import requestresult.*;
 import server.Server;
 import serverfacade.ServerFacade;
 
-import java.io.IOError;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,7 +29,7 @@ public class ServerFacadeTests {
         facade = new ServerFacade(port);
         facade.clear();
         facade.register(existingUser.username(), existingUser.password(), existingUser.email());
-        existingAuth = facade.login(existingUser.username(), existingUser.password()).authToken();
+        existingAuth = (String)facade.login(existingUser.username(), existingUser.password()).get("authToken");
     }
 
     @AfterAll
@@ -42,57 +41,62 @@ public class ServerFacadeTests {
     @Test
     public void loginNormal() throws IOException {
         assertDoesNotThrow(() -> facade.login(existingUser.username(), existingUser.password()));
-        LoginResult result = facade.login(existingUser.username(), existingUser.password());
-        assertTrue(result.authToken().length() >= 10);
+        Map<String, Object> result = facade.login(existingUser.username(), existingUser.password());
+        assertTrue(((String)result.get("authToken")).length() >= 10);
     }
     @Test
-    public void loginBadPassword() {
-        assertThrows(IOException.class, () -> facade.login(existingUser.username(), newUser.password()));
+    public void loginBadPassword() throws IOException {
+        var result = facade.login(existingUser.username(), newUser.password());
+        assertTrue(result.containsKey("message"));
     }
 
     // register
     @Test
     public void registerNormal() throws IOException {
-        RegisterResult result = facade.register(newUser.username(), newUser.password(), newUser.email());
-        assertEquals(newUser.username(), result.username());
-        assertTrue(result.authToken().length() > 10);
+        var result = facade.register(newUser.username(), newUser.password(), newUser.email());
+        assertEquals(newUser.username(), result.get("username"));
+        assertTrue(((String)result.get("authToken")).length() > 10);
     }
     @Test
-    public void registerExistingUser() {
-        assertThrows(IOException.class, () -> facade.register(existingUser.username(), existingUser.password(), existingUser.email()));
+    public void registerExistingUser() throws IOException {
+        var result = facade.register(existingUser.username(), existingUser.password(), existingUser.email());
+        assertTrue(result.containsKey("message"));
     }
 
     // logout
     @Test
     public void logoutNormal() throws IOException {
-        LoginResult loginResult = facade.login(existingUser.username(), existingUser.password());
-        assertDoesNotThrow(() -> facade.logout(loginResult.authToken()));
+        var result = facade.login(existingUser.username(), existingUser.password());
+        assertDoesNotThrow(() -> facade.logout((String)result.get("authToken")));
     }
     @Test
-    public void logoutFakeAuth() {
-        assertThrows(IOError.class, () -> facade.logout("fake-auth-token"));
+    public void logoutFakeAuth() throws IOException {
+        var result = facade.logout("fake-auth-token");
+        assertTrue(result.containsKey("message"));
     }
 
     // list
     @Test
     public void listNormal() throws IOException {
-        ListResult result = facade.list(existingAuth);
-        assertInstanceOf(Collection.class, result.games());
+        var result = facade.list(existingAuth);
+        assertInstanceOf(Collection.class, result.get("games"));
     }
     @Test
-    public void listBadAuth() {
-        assertThrows(IOException.class, () -> facade.list("fake-auth"));
+    public void listBadAuth() throws IOException {
+        var result = facade.list("fake-auth");
+        assertTrue(result.containsKey("message"));
     }
 
     // create
     @Test
     public void createNormal() throws IOException {
-        CreateResult result = facade.create(existingAuth, "newGame");
-        assertTrue(result.gameID() >= 1);
+        var result = facade.create(existingAuth, "newGame");
+        assertTrue((int)result.get("gameID") >= 1);
     }
     @Test
-    public void createBadAuth() {
-        assertThrows(IOException.class, () -> facade.create("bad-auth", "newGame"));
+    public void createBadAuth() throws IOException {
+        var result = facade.create("bad-auth", "newGame");
+        assertTrue(result.containsKey("message"));
     }
 
     // join
@@ -101,8 +105,9 @@ public class ServerFacadeTests {
         assertDoesNotThrow(() -> facade.join(existingAuth, ChessGame.TeamColor.WHITE, 1));
     }
     @Test
-    public void joinNonexistentGame() {
-        assertThrows(IOException.class, () -> facade.join(existingAuth, ChessGame.TeamColor.WHITE, -1));
+    public void joinNonexistentGame() throws IOException {
+        var result = facade.join(existingAuth, ChessGame.TeamColor.WHITE, -1);
+        assertTrue(result.containsKey("message"));
     }
 
     // clear

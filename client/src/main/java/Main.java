@@ -1,15 +1,10 @@
 import chess.*;
 import model.GameData;
-import requestresult.ListResult;
-import requestresult.LoginResult;
-import requestresult.RegisterResult;
 import server.Server;
 import serverfacade.ServerFacade;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
 import static ui.EscapeSequences.*;
 
@@ -84,19 +79,25 @@ public class Main {
     }
 
     private static void handleLogin() throws IOException {
+        // get info from user
         System.out.println("Username: ");
         String username = scanner.nextLine();
         System.out.println("Password: ");
         String password = scanner.nextLine();
 
-        LoginResult loginResult = facade.login(username, password);
-        if (loginResult.authToken() != null) {
-            authToken = loginResult.authToken();
+        // perform login
+        Map<String, Object> response = facade.login(username, password);
+        if (!response.containsKey("message")) {
+            System.out.printf("Successfully logged in user %s.%n", response.get("username"));
+            authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
+        } else {
+            System.out.println(response.get("message"));
         }
     }
 
     private static void handleRegister() throws IOException {
+        // get info from user
         System.out.println("Username: ");
         String username = scanner.nextLine();
         System.out.println("Password: ");
@@ -104,43 +105,58 @@ public class Main {
         System.out.println("Email: ");
         String email = scanner.nextLine();
 
-        RegisterResult registerResult = facade.register(username, password, email);
-        if (registerResult.authToken() != null) {
-            authToken = registerResult.authToken();
+        // perform register
+        Map<String, Object> response = facade.register(username, password, email);
+        if (!response.containsKey("message")) {
+            System.out.printf("Successfully logged in user %s.%n", response.get("username"));
+            authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
-            handleHelp();
+        } else {
+            System.out.println(response.get("message"));
         }
     }
 
     private static void handleLogout() throws IOException {
-        facade.logout(authToken);
-        state = AppState.PRELOGIN;
-    }
-
-    private static void handleCreate() throws IOException {
-        System.out.println("Game name: ");
-        String gameName = scanner.nextLine();
-
-        facade.create(authToken, gameName);
+        Map<String, Object> response = facade.logout(authToken);
+        if (!response.containsKey("message")) {
+            state = AppState.PRELOGIN;
+            System.out.println("Successfully logged out.");
+        } else {
+            System.out.println(response.get("message"));
+        }
     }
 
     private static void handleList() throws IOException {
-        ListResult listResult = facade.list(authToken);
+        Map<String, Object> list = facade.list(authToken);
 
         currGameList = new HashMap<>();
         int i = 0;
-        for (GameData game : listResult.games()) {
+        for (GameData game : (Collection<GameData>) list.get("games")) {
             currGameList.put(i, game);
             System.out.printf("%d: %s, ID: %d%n", i++, game.gameName(), game.gameID());
         }
     }
 
+    private static void handleCreate() throws IOException {
+        // get game name from user
+        System.out.println("Game name: ");
+        String gameName = scanner.nextLine();
+
+        // create game
+        Map<String, Object> response = facade.create(authToken, gameName);
+        if (!response.containsKey("message")) {
+            System.out.printf("Successfully created game %s.%n", gameName);
+        } else {
+            System.out.println(response.get("message"));
+        }
+    }
+
     private static void handlePlay() throws IOException {
+        // get and parse info from user
         System.out.println("Enter number of the game you would like to join (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
         System.out.println("Enter color you would like to play as: ");
         String colorStr = scanner.nextLine();
-
         while (!colorStr.equalsIgnoreCase("WHITE") && !colorStr.equalsIgnoreCase("BLACK")) {
             System.out.println("Color not recognized. Please enter 'WHITE' or 'BLACK'.");
             colorStr = scanner.nextLine();
@@ -148,13 +164,19 @@ public class Main {
         ChessGame.TeamColor playerColor = colorStr.equalsIgnoreCase("WHITE") ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
         GameData game = currGameList.get(gameNum);
 
-        facade.join(authToken, playerColor, game.gameID());
+        // join game
+        Map<String, Object> response = facade.join(authToken, playerColor, game.gameID());
+        if (!response.containsKey("message")) {
+            System.out.printf("Successfully joined game %s.%n", game.gameName());
+        } else {
+            System.out.println(response.get("message"));
+        }
 
         // proceed to play game
         drawStartingBoard();
     }
 
-    private static void handleObserve() throws IOException {
+    private static void handleObserve() {
         System.out.println("Enter number of the game you would like to observe (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
         GameData game = currGameList.get(gameNum);

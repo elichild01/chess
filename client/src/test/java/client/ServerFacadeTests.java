@@ -17,9 +17,9 @@ public class ServerFacadeTests {
 
     private static Server server;
     private static ServerFacade facade;
-    private static final UserData existingUser = new UserData("existingUsername", "existingPassword", "existingEmail");
+    private static final UserData EXISTING_USER = new UserData("existingUsername", "existingPassword", "existingEmail");
     private static String existingAuth;
-    private static final UserData newUser = new UserData("newUsername", "newPassword", "newEmail");
+    private static final UserData NEW_USER = new UserData("newUsername", "newPassword", "newEmail");
 
     @BeforeAll
     public static void init() throws IOException {
@@ -28,8 +28,8 @@ public class ServerFacadeTests {
         System.out.println("Started test HTTP server on " + port);
         facade = new ServerFacade(port);
         facade.clear();
-        facade.register(existingUser.username(), existingUser.password(), existingUser.email());
-        existingAuth = (String)facade.login(existingUser.username(), existingUser.password()).get("authToken");
+        facade.register(EXISTING_USER.username(), EXISTING_USER.password(), EXISTING_USER.email());
+        existingAuth = (String)facade.login(EXISTING_USER.username(), EXISTING_USER.password()).get("authToken");
     }
 
     @AfterAll
@@ -40,34 +40,34 @@ public class ServerFacadeTests {
     // login
     @Test
     public void loginNormal() throws IOException {
-        assertDoesNotThrow(() -> facade.login(existingUser.username(), existingUser.password()));
-        Map<String, Object> result = facade.login(existingUser.username(), existingUser.password());
+        assertDoesNotThrow(() -> facade.login(EXISTING_USER.username(), EXISTING_USER.password()));
+        Map<String, Object> result = facade.login(EXISTING_USER.username(), EXISTING_USER.password());
         assertTrue(((String)result.get("authToken")).length() >= 10);
     }
     @Test
     public void loginBadPassword() throws IOException {
-        var result = facade.login(existingUser.username(), newUser.password());
+        var result = facade.login(EXISTING_USER.username(), NEW_USER.password());
         assertTrue(result.containsKey("message"));
     }
 
     // register
     @Test
     public void registerNormal() throws IOException {
-        var result = facade.register(newUser.username(), newUser.password(), newUser.email());
-        assertEquals(newUser.username(), result.get("username"));
+        var result = facade.register(NEW_USER.username(), NEW_USER.password(), NEW_USER.email());
+        assertEquals(NEW_USER.username(), result.get("username"));
         assertTrue(((String)result.get("authToken")).length() > 10);
     }
     @Test
     public void registerExistingUser() throws IOException {
-        facade.register(existingUser.username(), existingUser.password(), existingUser.email());
-        var result = facade.register(existingUser.username(), existingUser.password(), existingUser.email());
+        facade.register(EXISTING_USER.username(), EXISTING_USER.password(), EXISTING_USER.email());
+        var result = facade.register(EXISTING_USER.username(), EXISTING_USER.password(), EXISTING_USER.email());
         assertTrue(result.containsKey("message"));
     }
 
     // logout
     @Test
     public void logoutNormal() throws IOException {
-        var result = facade.login(existingUser.username(), existingUser.password());
+        var result = facade.login(EXISTING_USER.username(), EXISTING_USER.password());
         assertDoesNotThrow(() -> facade.logout((String)result.get("authToken")));
     }
     @Test
@@ -79,7 +79,7 @@ public class ServerFacadeTests {
     // list
     @Test
     public void listNormal() throws IOException {
-        existingAuth = (String)facade.login(existingUser.username(), existingUser.password()).get("authToken");
+        existingAuth = (String)facade.login(EXISTING_USER.username(), EXISTING_USER.password()).get("authToken");
         facade.create(existingAuth, "funGame");
         var result = facade.list(existingAuth);
         assertInstanceOf(Collection.class, result.get("games"));

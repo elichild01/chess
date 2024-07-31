@@ -1,6 +1,5 @@
 import chess.*;
 import model.GameData;
-//import server.Server;
 import serverfacade.ServerFacade;
 
 import java.io.IOException;
@@ -18,9 +17,6 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         // use only for purposes of running locally
-//        Server server = new Server();
-//        int port = server.run(0);
-//        System.out.println("Started Main HTTP server on " + port);
         int port = 0;
         facade = new ServerFacade(port);
 

@@ -79,6 +79,8 @@ public class ServerFacadeTests {
     // list
     @Test
     public void listNormal() throws IOException {
+        existingAuth = (String)facade.login(existingUser.username(), existingUser.password()).get("authToken");
+        facade.create(existingAuth, "funGame");
         var result = facade.list(existingAuth);
         assertInstanceOf(Collection.class, result.get("games"));
     }
@@ -92,7 +94,7 @@ public class ServerFacadeTests {
     @Test
     public void createNormal() throws IOException {
         var result = facade.create(existingAuth, "newGame");
-        assertTrue((int)result.get("gameID") >= 1);
+        assertTrue(Math.round((double)result.get("gameID")) >= 1);
     }
     @Test
     public void createBadAuth() throws IOException {

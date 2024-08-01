@@ -41,6 +41,11 @@ public class Main {
                     case "list" -> handleList();
                     case "play" -> handlePlay();
                     case "observe" -> handleObserve();
+                    case "redraw" -> handleRedraw();
+                    case "leave" -> handleLeave();
+                    case "move" -> handleMove();
+                    case "resign" -> handleResign();
+                    case "highlight" -> handleHighlight();
                     default -> handleUnrecognizedOption();
                 }
             }
@@ -64,9 +69,19 @@ public class Main {
                 help - display this help text
                 """;
 
+        String gamePlayHelp = """
+                redraw - redraw chess board
+                leave - leave current game
+                move - make move in chess game
+                resign - resign from current game
+                highlight - highlight legal moves for given piece
+                help - display this help text
+                """;
+
         switch (state) {
             case PRELOGIN -> System.out.print(preLoginHelp);
             case POSTLOGIN -> System.out.print(postLoginHelp);
+            case GAMEPLAY -> System.out.print(gamePlayHelp);
         }
     }
 
@@ -186,19 +201,42 @@ public class Main {
         drawStartingBoard();
     }
 
+    private static void handleRedraw() {
+
+    }
+
+    private static void handleLeave() {
+
+    }
+
+    private static void handleMove() {
+
+    }
+
+    private static void handleResign() {
+
+    }
+
+    private static void handleHighlight() {
+
+    }
+
+
     private static void handleUnrecognizedOption() {
         System.out.println("Option not recognized. Type 'help' to get started.");
     }
 
     private enum AppState {
         PRELOGIN,
-        POSTLOGIN
+        POSTLOGIN,
+        GAMEPLAY
     }
 
     private static String[] getUserOptions(AppState state) {
         return switch (state) {
             case PRELOGIN -> new String[]{"help", "quit", "login", "register"};
             case POSTLOGIN -> new String[]{"help", "logout", "create", "list", "play", "observe"};
+            case GAMEPLAY -> new String[]{"help", "redraw", "leave", "move", "resign", "highlight"};
         };
     }
 

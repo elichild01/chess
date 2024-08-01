@@ -82,12 +82,12 @@ public class ServerFacadeTests {
         existingAuth = (String)facade.login(EXISTING_USER.username(), EXISTING_USER.password()).get("authToken");
         facade.create(existingAuth, "funGame");
         var result = facade.list(existingAuth);
-        assertInstanceOf(Collection.class, result.get("games"));
+        assertInstanceOf(Collection.class, result.games());
     }
     @Test
     public void listBadAuth() throws IOException {
         var result = facade.list("fake-auth");
-        assertTrue(result.containsKey("message"));
+        assertNotNull(result.message());
     }
 
     // create

@@ -2,6 +2,7 @@ package serverfacade;
 
 import chess.ChessGame;
 import com.google.gson.Gson;
+import requestresult.ListResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +29,7 @@ public class ServerFacade {
         request.put("username", username);
         request.put("password", password);
 
-        return handleRequest(connection, request);
+        return handleRequest(connection, request, HashMap.class);
     }
 
     public Map<String, Object> register(String username, String password, String email) throws IOException {
@@ -40,7 +41,7 @@ public class ServerFacade {
         request.put("username", username);
         request.put("password", password);
         request.put("email", email);
-        return handleRequest(connection, request);
+        return handleRequest(connection, request, HashMap.class);
     }
 
     public Map<String, Object> logout(String authToken) throws IOException {
@@ -48,15 +49,15 @@ public class ServerFacade {
         String route = "/session";
         HttpURLConnection connection = getHTTPConnection(requestType, route, authToken);
 
-        return handleRequest(connection, null);
+        return handleRequest(connection, null, HashMap.class);
     }
 
-    public Map<String, Object> list(String authToken) throws IOException {
+    public ListResult list(String authToken) throws IOException {
         String requestType = "GET";
         String route = "/game";
         HttpURLConnection connection = getHTTPConnection(requestType, route, authToken);
 
-        return handleRequest(connection, null);
+        return handleRequest(connection, null, ListResult.class);
     }
 
     public Map<String, Object> create(String authToken, String gameName) throws IOException {
@@ -66,7 +67,7 @@ public class ServerFacade {
 
         Map<String, Object> request = new HashMap<>();
         request.put("gameName", gameName);
-        return handleRequest(connection, request);
+        return handleRequest(connection, request, HashMap.class);
     }
 
     public Map<String, Object> join(String authToken, ChessGame.TeamColor playerColor, int gameID) throws IOException {
@@ -77,7 +78,7 @@ public class ServerFacade {
         Map<String, Object> request = new HashMap<>();
         request.put("playerColor", playerColor);
         request.put("gameID", gameID);
-        return handleRequest(connection, request);
+        return handleRequest(connection, request, HashMap.class);
     }
 
     public Map<String, Object> clear() throws IOException {
@@ -86,7 +87,7 @@ public class ServerFacade {
         HttpURLConnection connection = getHTTPConnection(requestType, route, null);
 
         System.out.println("Cleared all users, games, and auths.");
-        return handleRequest(connection, null);
+        return handleRequest(connection, null, HashMap.class);
     }
 
     private HttpURLConnection getHTTPConnection(String httpType, String route, String authToken) throws IOException {
@@ -107,7 +108,7 @@ public class ServerFacade {
         return connection;
     }
 
-    private Map<String, Object> handleRequest(HttpURLConnection connection, Map<String, Object> request) throws IOException {
+    private <T> T handleRequest(HttpURLConnection connection, Map<String, Object> request, Class<T> responseClass) throws IOException {
         if (request != null) {
             try (OutputStream requestBody = connection.getOutputStream()) {
                 var jsonBody = new Gson().toJson(request);
@@ -118,12 +119,12 @@ public class ServerFacade {
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
             try (InputStream responseBody = connection.getInputStream()) {
                 InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
-                return new Gson().fromJson(inputStreamReader, Map.class);
+                return new Gson().fromJson(inputStreamReader, responseClass);
             }
         } else {
             try (InputStream responseBody = connection.getErrorStream()) {
                 InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
-                return new Gson().fromJson(inputStreamReader, Map.class);
+                return new Gson().fromJson(inputStreamReader, responseClass);
             }
         }
     }

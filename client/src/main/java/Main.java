@@ -1,5 +1,6 @@
 import chess.*;
 import model.GameData;
+import requestresult.ListResult;
 import serverfacade.ServerFacade;
 
 import java.io.IOException;
@@ -16,8 +17,7 @@ public class Main {
     private static HashMap<Integer, GameData> currGameList;
 
     public static void main(String[] args) throws Exception {
-        // use only for purposes of running locally
-        int port = 0;
+        int port = 8080;
         facade = new ServerFacade(port);
 
         var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
@@ -85,12 +85,13 @@ public class Main {
         // perform login
         Map<String, Object> response = facade.login(username, password);
         if (!response.containsKey("message")) {
-            System.out.printf("Successfully logged in user %s.%n", response.get("username"));
             authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
+            System.out.printf("Successfully logged in user %s.%n", response.get("username"));
         } else {
             System.out.println(response.get("message"));
         }
+        handleHelp();
     }
 
     private static void handleRegister() throws IOException {
@@ -105,12 +106,13 @@ public class Main {
         // perform register
         Map<String, Object> response = facade.register(username, password, email);
         if (!response.containsKey("message")) {
-            System.out.printf("Successfully logged in user %s.%n", response.get("username"));
             authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
+            System.out.printf("Successfully logged in user %s.%n", response.get("username"));
         } else {
             System.out.println(response.get("message"));
         }
+        handleHelp();
     }
 
     private static void handleLogout() throws IOException {
@@ -121,14 +123,15 @@ public class Main {
         } else {
             System.out.println(response.get("message"));
         }
+        handleHelp();
     }
 
     private static void handleList() throws IOException {
-        Map<String, Object> list = facade.list(authToken);
+        ListResult list = facade.list(authToken);
 
         currGameList = new HashMap<>();
         int i = 0;
-        for (GameData game : (Collection<GameData>) list.get("games")) {
+        for (GameData game : list.games()) {
             currGameList.put(i, game);
             System.out.printf("%d: %s, ID: %d%n", i++, game.gameName(), game.gameID());
         }
@@ -152,6 +155,7 @@ public class Main {
         // get and parse info from user
         System.out.println("Enter number of the game you would like to join (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
+        scanner.nextLine();
         System.out.println("Enter color you would like to play as: ");
         String colorStr = scanner.nextLine();
         while (!colorStr.equalsIgnoreCase("WHITE") && !colorStr.equalsIgnoreCase("BLACK")) {
@@ -259,7 +263,7 @@ public class Main {
             printSquare(borderBackgroundColor, borderTextColor, String.format(" %s ", colChar));
         }
         printSquare(borderBackgroundColor, "", EMPTY);
-        System.out.printf("%s\n\n", RESET_BG_COLOR);
+        System.out.printf("%s%s\n\n", RESET_BG_COLOR, RESET_TEXT_COLOR);
     }
 
     private static void printSquare(String backgroundColor, String textColor, String character) {

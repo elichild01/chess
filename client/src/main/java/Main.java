@@ -144,11 +144,15 @@ public class Main {
     private static void handleList() throws IOException {
         ListResult list = facade.list(authToken);
 
-        currGameList = new HashMap<>();
-        int i = 0;
-        for (GameData game : list.games()) {
-            currGameList.put(i, game);
-            System.out.printf("%d: %s, ID: %d%n", i++, game.gameName(), game.gameID());
+        if (list.games().isEmpty()) {
+            System.out.println("There are currently no games to display.");
+        } else {
+            currGameList = new HashMap<>();
+            int i = 0;
+            for (GameData game : list.games()) {
+                currGameList.put(i, game);
+                System.out.printf("%d: %s, whiteUsername: %s, blackUsername: %s%n", i++, game.gameName(), game.whiteUsername(), game.blackUsername());
+            }
         }
     }
 

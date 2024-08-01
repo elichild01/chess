@@ -23,7 +23,7 @@ public class GameService extends Service {
         authenticate(request.authToken());
 
         Collection<GameData> games = gameDataAccess.listAllGames();
-        return new ListResult(games);
+        return new ListResult(games, null);
     }
 
     public CreateResult create(CreateRequest request) throws DataAccessException{

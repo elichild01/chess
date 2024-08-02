@@ -208,7 +208,7 @@ public class Main {
             System.out.printf("Error: %s%n", ex.getMessage());
         }
         // send a CONNECT WebSocket message
-        ws.connect();
+        ws.connect(authToken, currGame.gameID());
         // transition to gameplay UI
         state = AppState.GAMEPLAY;
     }

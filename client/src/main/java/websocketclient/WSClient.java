@@ -1,21 +1,17 @@
 package websocketclient;
 
+import chess.ChessMove;
+import com.google.gson.Gson;
+import websocket.commands.MakeMoveCommand;
+import websocket.commands.UserGameCommand;
+
 import javax.websocket.*;
+import java.io.IOException;
 import java.net.URI;
-import java.util.Scanner;
+
 
 public class WSClient extends Endpoint {
-    public static void main(String[] args) throws Exception {
-        var ws = new WSClient();
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("Enter a message you want to echo");
-        while (true) {
-            ws.send(scanner.nextLine());
-        }
-    }
-
-    public Session session;
+    private final Session session;
 
     public WSClient() throws Exception {
         URI uri = new URI("ws://localhost:8080/ws");
@@ -29,10 +25,34 @@ public class WSClient extends Endpoint {
         });
     }
 
-    public void send(String msg) throws Exception {
-        this.session.getBasicRemote().sendText(msg);
-    }
-
     public void onOpen(Session session, EndpointConfig endpointConfig) {
     }
+
+    public void connect(String authToken, int gameID) throws IOException {
+        send(UserGameCommand.CommandType.CONNECT, authToken, gameID, null);
+    }
+
+    public void makeMove(ChessMove move) {
+
+    }
+
+    public void leave() {
+
+    }
+
+    public void resign() {
+
+    }
+
+    private void send(UserGameCommand.CommandType commandType, String authToken, int gameID, ChessMove move) throws IOException {
+        UserGameCommand command;
+        if (move == null) {
+            command = new UserGameCommand(commandType, authToken, gameID);
+        } else {
+            command = new MakeMoveCommand(commandType, authToken, gameID, move);
+        }
+
+        session.getBasicRemote().sendText(new Gson().toJson(command));
+    }
+
 }

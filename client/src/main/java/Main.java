@@ -2,6 +2,7 @@ import chess.*;
 import model.GameData;
 import requestresult.ListResult;
 import serverfacade.ServerFacade;
+import websocketclient.WSClient;
 
 import java.io.IOException;
 import java.util.*;
@@ -11,14 +12,18 @@ import static ui.EscapeSequences.*;
 public class Main {
     private static boolean finished;
     private static AppState state = AppState.PRELOGIN;
-    private static ServerFacade facade;
+    private static ServerFacade server;
     private static Scanner scanner;
     private static String authToken;
     private static HashMap<Integer, GameData> currGameList;
+    private static GameData currGame;
+    private static ChessGame.TeamColor currColor;
+    private static WSClient ws;
+
 
     public static void main(String[] args) throws Exception {
         int port = 8080;
-        facade = new ServerFacade(port);
+        server = new ServerFacade(port);
 
         var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
         System.out.println("♕ 240 Chess Client: " + piece);
@@ -48,6 +53,9 @@ public class Main {
                     case "highlight" -> handleHighlight();
                     default -> handleUnrecognizedOption();
                 }
+            }
+            if (state == AppState.GAMEPLAY) {
+                drawBoard(currGame.game().getBoard(), currColor == ChessGame.TeamColor.BLACK);
             }
         }
     }
@@ -98,7 +106,7 @@ public class Main {
         String password = scanner.nextLine();
 
         // perform login
-        Map<String, Object> response = facade.login(username, password);
+        Map<String, Object> response = server.login(username, password);
         if (!response.containsKey("message")) {
             authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
@@ -119,7 +127,7 @@ public class Main {
         String email = scanner.nextLine();
 
         // perform register
-        Map<String, Object> response = facade.register(username, password, email);
+        Map<String, Object> response = server.register(username, password, email);
         if (!response.containsKey("message")) {
             authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
@@ -131,7 +139,7 @@ public class Main {
     }
 
     private static void handleLogout() throws IOException {
-        Map<String, Object> response = facade.logout(authToken);
+        Map<String, Object> response = server.logout(authToken);
         if (!response.containsKey("message")) {
             state = AppState.PRELOGIN;
             System.out.println("Successfully logged out.");
@@ -142,7 +150,7 @@ public class Main {
     }
 
     private static void handleList() throws IOException {
-        ListResult list = facade.list(authToken);
+        ListResult list = server.list(authToken);
 
         if (list.games().isEmpty()) {
             System.out.println("There are currently no games to display.");
@@ -162,7 +170,7 @@ public class Main {
         String gameName = scanner.nextLine();
 
         // create game
-        Map<String, Object> response = facade.create(authToken, gameName);
+        Map<String, Object> response = server.create(authToken, gameName);
         if (!response.containsKey("message")) {
             System.out.printf("Successfully created game %s.%n", gameName);
         } else {
@@ -182,18 +190,27 @@ public class Main {
             colorStr = scanner.nextLine();
         }
         ChessGame.TeamColor playerColor = colorStr.equalsIgnoreCase("WHITE") ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
-        GameData game = currGameList.get(gameNum);
+        currGame = currGameList.get(gameNum);
 
         // join game
-        Map<String, Object> response = facade.join(authToken, playerColor, game.gameID());
+        Map<String, Object> response = server.join(authToken, playerColor, currGame.gameID());
         if (!response.containsKey("message")) {
-            System.out.printf("Successfully joined game %s.%n", game.gameName());
+            currColor = playerColor;
+            System.out.printf("Successfully joined game %s.%n", currGame.gameName());
         } else {
             System.out.println(response.get("message"));
         }
 
-        // proceed to play game
-        drawStartingBoard();
+        // open WebSocket connection
+        try {
+            ws = new WSClient();
+        } catch (Exception ex) {
+            System.out.printf("Error: %s%n", ex.getMessage());
+        }
+        // send a CONNECT WebSocket message
+        ws.connect();
+        // transition to gameplay UI
+        state = AppState.GAMEPLAY;
     }
 
     private static void handleObserve() {

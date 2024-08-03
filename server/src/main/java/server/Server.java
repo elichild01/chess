@@ -12,8 +12,8 @@ import websocketserver.WSServer;
 import java.util.Map;
 
 public class Server {
-    private final GameService gameService;
     private final UserService userService;
+    private final GameService gameService;
     private final ClearService clearService;
     private final WSServer wsServer;
     private final int successStatus = 200;
@@ -51,14 +51,14 @@ public class Server {
         this.userService = new UserService(userDataAccess, authDataAccess);
         this.gameService = new GameService(authDataAccess, gameDataAccess);
         this.clearService = new ClearService(userDataAccess, authDataAccess, gameDataAccess);
-        this.wsServer = new WSServer();
+        this.wsServer = new WSServer(this.userService, this.gameService, this.clearService);
     }
 
     public Server(UserService userService, GameService gameService, ClearService clearService) {
         this.userService = userService;
         this.gameService = gameService;
         this.clearService = clearService;
-        this.wsServer = new WSServer();
+        this.wsServer = new WSServer(this.userService, this.gameService, this.clearService);
     }
 
     public int run(int desiredPort) {

@@ -10,6 +10,7 @@ import java.util.*;
 import static ui.EscapeSequences.*;
 
 public class Main {
+    private static String username;
     private static boolean finished;
     private static AppState state = AppState.PRELOGIN;
     private static ServerFacade httpServer;
@@ -101,15 +102,16 @@ public class Main {
     private static void handleLogin() throws IOException {
         // get info from user
         System.out.print("Username: ");
-        String username = scanner.nextLine();
+        String enteredUsername = scanner.nextLine();
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
         // perform login
-        Map<String, Object> response = httpServer.login(username, password);
+        Map<String, Object> response = httpServer.login(enteredUsername, password);
         if (!response.containsKey("message")) {
             authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
+            username = enteredUsername;
             System.out.printf("Successfully logged in user %s.%n", response.get("username"));
         } else {
             System.out.println(response.get("message"));
@@ -120,17 +122,18 @@ public class Main {
     private static void handleRegister() throws IOException {
         // get info from user
         System.out.print("Username: ");
-        String username = scanner.nextLine();
+        String enteredUsername = scanner.nextLine();
         System.out.print("Password: ");
         String password = scanner.nextLine();
         System.out.print("Email: ");
         String email = scanner.nextLine();
 
         // perform register
-        Map<String, Object> response = httpServer.register(username, password, email);
+        Map<String, Object> response = httpServer.register(enteredUsername, password, email);
         if (!response.containsKey("message")) {
             authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
+            username = enteredUsername;
             System.out.printf("Successfully logged in user %s.%n", response.get("username"));
         } else {
             System.out.println(response.get("message"));
@@ -206,7 +209,7 @@ public class Main {
             }
 
             // send a CONNECT WebSocket message
-            wsClient.connect(authToken, currGame.gameID());
+            wsClient.connect(authToken, currGame.gameID(), username);
 
             // transition to gameplay UI
             state = AppState.GAMEPLAY;
@@ -219,7 +222,8 @@ public class Main {
     private static void handleObserve() {
         System.out.print("Enter number of the game you would like to observe (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
-        GameData game = currGameList.get(gameNum);
+        currGame = currGameList.get(gameNum);
+        currColor = null;
 
         // proceed to observe game
         drawStartingBoards();
@@ -229,7 +233,7 @@ public class Main {
 
     private static void handleLeave() {
         try {
-            wsClient.leave(authToken, currGame.gameID());
+            wsClient.leave(authToken, currGame.gameID(), username);
         } catch (IOException err) {
             System.out.printf("Could not leave game %s. %s%n", currGame.gameName(), err.getMessage());
             return;
@@ -256,7 +260,7 @@ public class Main {
         ChessMove move = new ChessMove(fromPosition, toPosition, null);
 
         try {
-            wsClient.makeMove(authToken, currGame.gameID(), move);
+            wsClient.makeMove(authToken, currGame.gameID(), username, move);
         } catch (IOException err) {
             System.out.printf("Could not make move %s. %s%n", move, err.getMessage());
         }

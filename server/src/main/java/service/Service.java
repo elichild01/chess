@@ -11,7 +11,7 @@ public abstract class Service {
         this.authDataAccess = authDataAccess;
     }
 
-    protected AuthData authenticate(String authToken) throws DataAccessException {
+    public AuthData authenticate(String authToken) throws DataAccessException {
         nullCheck(authToken);
 
         AuthData auth = authDataAccess.retrieveAuthByAuthToken(authToken);

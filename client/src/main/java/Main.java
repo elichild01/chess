@@ -100,9 +100,9 @@ public class Main {
 
     private static void handleLogin() throws IOException {
         // get info from user
-        System.out.println("Username: ");
+        System.out.print("Username: ");
         String username = scanner.nextLine();
-        System.out.println("Password: ");
+        System.out.print("Password: ");
         String password = scanner.nextLine();
 
         // perform login
@@ -119,11 +119,11 @@ public class Main {
 
     private static void handleRegister() throws IOException {
         // get info from user
-        System.out.println("Username: ");
+        System.out.print("Username: ");
         String username = scanner.nextLine();
-        System.out.println("Password: ");
+        System.out.print("Password: ");
         String password = scanner.nextLine();
-        System.out.println("Email: ");
+        System.out.print("Email: ");
         String email = scanner.nextLine();
 
         // perform register
@@ -212,11 +212,12 @@ public class Main {
             state = AppState.GAMEPLAY;
         } else {
             System.out.println(response.get("message"));
+            handleHelp();
         }
     }
 
     private static void handleObserve() {
-        System.out.println("Enter number of the game you would like to observe (from most recently-displayed list): ");
+        System.out.print("Enter number of the game you would like to observe (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
         GameData game = currGameList.get(gameNum);
 
@@ -227,11 +228,38 @@ public class Main {
     private static void handleRedraw() {}
 
     private static void handleLeave() {
+        try {
+            wsClient.leave(authToken, currGame.gameID());
+        } catch (IOException err) {
+            System.out.printf("Could not leave game %s. %s%n", currGame.gameName(), err.getMessage());
+            return;
+        }
 
+        // Leave game
+        currGame = null;
+        currColor = null;
+        state = AppState.POSTLOGIN;
     }
 
     private static void handleMove() {
+        // get info from user
+        System.out.print("Please enter the square you would like to move FROM (letter and number, no space, e.g. A1): ");
+        String fromSquare = scanner.nextLine();
+        System.out.print("Please enter the square you would like to move TO (letter and number, no space, e.g. B3): ");
+        String toSquare = scanner.nextLine();
 
+        // FIXME: figure out pawn promotion!
+
+        ChessPosition fromPosition = parseSquareInfo(fromSquare);
+        ChessPosition toPosition = parseSquareInfo(toSquare);
+
+        ChessMove move = new ChessMove(fromPosition, toPosition, null);
+
+        try {
+            wsClient.makeMove(authToken, currGame.gameID(), move);
+        } catch (IOException err) {
+            System.out.printf("Could not make move %s. %s%n", move, err.getMessage());
+        }
     }
 
     private static void handleResign() {
@@ -349,5 +377,30 @@ public class Main {
                 case PAWN -> BLACK_PAWN;
             };
         }
+    }
+
+    private static ChessPosition parseSquareInfo(String squareInfo) {
+        if (squareInfo.length() != 2) {
+            return null;
+        }
+
+        String[] colLetters = {"a", "b", "c", "d", "e", "f", "g", "h"};
+        String[] rowNumbers = {"1", "2", "3", "4", "5", "6", "7", "8"};
+
+        String colStr = squareInfo.substring(0, 1).toLowerCase();
+        String rowStr = squareInfo.substring(1);
+
+        if (!Arrays.asList(colLetters).contains(colStr)) { return null; }
+        if (!Arrays.asList(rowNumbers).contains(rowStr)) { return null; }
+
+        int col = 0;
+        for (int i = 0; i <= 7; i++) {
+            if (colLetters[i].equals(colStr)) {
+                col = i + 1;
+            }
+        }
+        int row = Integer.parseInt(rowStr);
+
+        return new ChessPosition(row, col);
     }
 }

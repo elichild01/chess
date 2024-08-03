@@ -7,7 +7,8 @@ import websocketclient.WSClient;
 import java.io.IOException;
 import java.util.*;
 
-import static ui.EscapeSequences.*;
+import static websocketclient.WSClient.currGame;
+import static websocketclient.WSClient.drawBoard;
 
 public class Main {
     private static String username;
@@ -17,13 +18,12 @@ public class Main {
     private static Scanner scanner;
     private static String authToken;
     private static HashMap<Integer, GameData> currGameList;
-    private static GameData currGame;
     private static ChessGame.TeamColor currColor;
     private static WSClient wsClient;
 
 
     public static void main(String[] args) throws Exception {
-        int port = 8080;
+        int port = 8081;
         httpServer = new ServerFacade(port);
 
         var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
@@ -182,6 +182,12 @@ public class Main {
     }
 
     private static void handlePlay() throws IOException {
+        if (currGameList == null || currGameList.isEmpty()) {
+            System.out.println("You cannot choose a game to play until you have seen the list of current games. Please enter 'list' first.");
+            handleHelp();
+            return;
+        }
+
         // get and parse info from user
         System.out.println("Enter number of the game you would like to join (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
@@ -206,6 +212,7 @@ public class Main {
                 wsClient = new WSClient();
             } catch (Exception ex) {
                 System.out.printf("Error: %s%n", ex.getMessage());
+                return;
             }
 
             // send a CONNECT WebSocket message
@@ -302,85 +309,6 @@ public class Main {
     private static void drawBoards(ChessBoard board) {
         drawBoard(board, false);
         drawBoard(board, true);
-    }
-
-    private static void drawBoard(ChessBoard board, boolean flip) {
-        String borderBackgroundColor = SET_BG_COLOR_YELLOW;
-        String borderTextColor = SET_TEXT_COLOR_BLACK + SET_TEXT_BOLD;
-
-        // sets directions if this is the first printing of the board or the reverse
-        int firstRow = 1;
-        int lastRow = 8;
-        char firstCol = 'h';
-        char lastCol = 'a';
-        int direction = 1;
-        if (flip) {
-            firstRow = 8;
-            lastRow = 1;
-            firstCol = 'a';
-            lastCol = 'h';
-            direction = -1;
-        }
-
-        // top border
-        printSquare(borderBackgroundColor, "", EMPTY);
-        for (char colChar = firstCol; colChar != lastCol-direction; colChar -= (char) direction) {
-            printSquare(borderBackgroundColor, borderTextColor, String.format(" %s ", colChar));
-        }
-        printSquare(borderBackgroundColor, "", EMPTY);
-        System.out.printf("%s\n", RESET_BG_COLOR);
-
-        // board and left/right borders
-        for (int row = firstRow; row != lastRow+direction; row += direction) {
-            printSquare(borderBackgroundColor, borderTextColor, String.format(" %d ", row));
-            for (int col = firstRow; col != lastRow+direction; col += direction) {
-                String squareColor = (row + col & 1) == 0 ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_BLACK;
-                ChessPiece piece = board.getPiece(new ChessPosition(row, 9-col));
-                String pieceColor = "";
-                String pieceString = EMPTY;
-                if (piece != null) {
-                    pieceColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ? SET_TEXT_COLOR_WHITE : SET_TEXT_COLOR_BLUE;
-                    pieceString = getStringRepresentingPiece(piece);
-                }
-                printSquare(squareColor, pieceColor, pieceString);
-            }
-            printSquare(borderBackgroundColor, borderTextColor, String.format(" %d ", row));
-            System.out.printf("%s\n", RESET_BG_COLOR);
-        }
-
-        // bottom border
-        printSquare(borderBackgroundColor, "", EMPTY);
-        for (char colChar = firstCol; colChar != lastCol-direction; colChar -= (char) direction) {
-            printSquare(borderBackgroundColor, borderTextColor, String.format(" %s ", colChar));
-        }
-        printSquare(borderBackgroundColor, "", EMPTY);
-        System.out.printf("%s%s%s\n\n", RESET_BG_COLOR, RESET_TEXT_COLOR, RESET_TEXT_BOLD_FAINT);
-    }
-
-    private static void printSquare(String backgroundColor, String textColor, String character) {
-        System.out.printf("%s%s%s", backgroundColor, textColor, character);
-    }
-
-    private static String getStringRepresentingPiece(ChessPiece piece) {
-        if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
-            return switch (piece.getPieceType()) {
-                case KING -> WHITE_KING;
-                case QUEEN -> WHITE_QUEEN;
-                case ROOK -> WHITE_ROOK;
-                case BISHOP -> WHITE_BISHOP;
-                case KNIGHT -> WHITE_KNIGHT;
-                case PAWN -> WHITE_PAWN;
-            };
-        } else {
-            return switch (piece.getPieceType()) {
-                case KING -> BLACK_KING;
-                case QUEEN -> BLACK_QUEEN;
-                case ROOK -> BLACK_ROOK;
-                case BISHOP -> BLACK_BISHOP;
-                case KNIGHT -> BLACK_KNIGHT;
-                case PAWN -> BLACK_PAWN;
-            };
-        }
     }
 
     private static ChessPosition parseSquareInfo(String squareInfo) {

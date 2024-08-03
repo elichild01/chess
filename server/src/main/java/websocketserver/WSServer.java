@@ -1,9 +1,9 @@
 package websocketserver;
 
 import com.google.gson.Gson;
-//import javax.websocket.*;
 
 import dataaccess.DataAccessException;
+import model.AuthData;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.eclipse.jetty.websocket.api.*;
@@ -29,6 +29,7 @@ public class WSServer {
     private final GameService gameService;
     private final ClearService clearService;
 
+
     public WSServer(UserService userService, GameService gameService, ClearService clearService) {
         this.connections = new ConnectionManager();
         this.userService = userService;
@@ -48,7 +49,9 @@ public class WSServer {
     }
 
     private void connect(Session session, UserGameCommand command) throws IOException {
-        connections.add(command.getUsername(), session, command.getGameID());
+        String username = getUsernameFromAuth(command.getAuthToken());
+
+        connections.add(username, session, command.getGameID());
 
         // load the requested game
         Collection<GameData> gameList;
@@ -56,7 +59,7 @@ public class WSServer {
             gameList = gameService.list(new ListRequest(command.getAuthToken())).games();
         } catch (DataAccessException ex) {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage, ErrorMessage.class));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
         GameData game = null;
@@ -67,27 +70,27 @@ public class WSServer {
         }
         if (game == null) {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: Game not found.");
-            session.getRemote().sendString(new Gson().toJson(errorMessage, ErrorMessage.class));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
 
         // send LOAD_GAME message
         LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
-        session.getRemote().sendString(new Gson().toJson(loadGameMessage, LoadGameMessage.class));
+        session.getRemote().sendString(new Gson().toJson(loadGameMessage));
 
         // notify other clients of connection
         String gameRole;
-        if (game.whiteUsername().equals(command.getUsername())) {
+        if (game.whiteUsername().equals(username)) {
             gameRole = "playing white.";
-        } else if (game.blackUsername().equals(command.getUsername())) {
+        } else if (game.blackUsername().equals(username)) {
             gameRole = "playing black.";
         } else {
             gameRole = "as an observer.";
         }
-        String notification = String.format("%s has joined the game %s", command.getUsername(), gameRole);
+        String notification = String.format("%s has joined the game %s", username, gameRole);
         NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notification);
 
-        connections.broadcast(command.getUsername(), notificationMessage, game.gameID());
+        connections.broadcast(username, notificationMessage, game.gameID());
     }
 
     private void makeMove(String message) {
@@ -102,5 +105,14 @@ public class WSServer {
 
     private void resign() {
 
+    }
+
+    private String getUsernameFromAuth(String authToken) throws IOException {
+        try {
+            AuthData authData = userService.authenticate(authToken);
+            return authData.username();
+        } catch (DataAccessException ex) {
+            throw new IOException(ex.getMessage());
+        }
     }
 }

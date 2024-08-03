@@ -32,16 +32,16 @@ public class WSClient extends Endpoint {
         send(UserGameCommand.CommandType.CONNECT, authToken, gameID, null);
     }
 
-    public void makeMove(ChessMove move) {
-
+    public void makeMove(String authToken, int gameID, ChessMove move) throws IOException {
+        send(UserGameCommand.CommandType.MAKE_MOVE, authToken, gameID, move);
     }
 
-    public void leave() {
-
+    public void leave(String authToken, int gameID) throws IOException {
+        send(UserGameCommand.CommandType.LEAVE, authToken, gameID, null);
     }
 
-    public void resign() {
-
+    public void resign(String authToken, int gameID) throws IOException {
+        send(UserGameCommand.CommandType.RESIGN, authToken, gameID, null);
     }
 
     private void send(UserGameCommand.CommandType commandType, String authToken, int gameID, ChessMove move) throws IOException {

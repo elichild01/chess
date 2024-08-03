@@ -12,18 +12,18 @@ import static ui.EscapeSequences.*;
 public class Main {
     private static boolean finished;
     private static AppState state = AppState.PRELOGIN;
-    private static ServerFacade server;
+    private static ServerFacade httpServer;
     private static Scanner scanner;
     private static String authToken;
     private static HashMap<Integer, GameData> currGameList;
     private static GameData currGame;
     private static ChessGame.TeamColor currColor;
-    private static WSClient ws;
+    private static WSClient wsClient;
 
 
     public static void main(String[] args) throws Exception {
         int port = 8080;
-        server = new ServerFacade(port);
+        httpServer = new ServerFacade(port);
 
         var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
         System.out.println("♕ 240 Chess Client: " + piece);
@@ -106,7 +106,7 @@ public class Main {
         String password = scanner.nextLine();
 
         // perform login
-        Map<String, Object> response = server.login(username, password);
+        Map<String, Object> response = httpServer.login(username, password);
         if (!response.containsKey("message")) {
             authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
@@ -127,7 +127,7 @@ public class Main {
         String email = scanner.nextLine();
 
         // perform register
-        Map<String, Object> response = server.register(username, password, email);
+        Map<String, Object> response = httpServer.register(username, password, email);
         if (!response.containsKey("message")) {
             authToken = (String) response.get("authToken");
             state = AppState.POSTLOGIN;
@@ -139,7 +139,7 @@ public class Main {
     }
 
     private static void handleLogout() throws IOException {
-        Map<String, Object> response = server.logout(authToken);
+        Map<String, Object> response = httpServer.logout(authToken);
         if (!response.containsKey("message")) {
             state = AppState.PRELOGIN;
             System.out.println("Successfully logged out.");
@@ -150,7 +150,7 @@ public class Main {
     }
 
     private static void handleList() throws IOException {
-        ListResult list = server.list(authToken);
+        ListResult list = httpServer.list(authToken);
 
         if (list.games().isEmpty()) {
             System.out.println("There are currently no games to display.");
@@ -170,7 +170,7 @@ public class Main {
         String gameName = scanner.nextLine();
 
         // create game
-        Map<String, Object> response = server.create(authToken, gameName);
+        Map<String, Object> response = httpServer.create(authToken, gameName);
         if (!response.containsKey("message")) {
             System.out.printf("Successfully created game %s.%n", gameName);
         } else {
@@ -193,24 +193,26 @@ public class Main {
         currGame = currGameList.get(gameNum);
 
         // join game
-        Map<String, Object> response = server.join(authToken, playerColor, currGame.gameID());
+        Map<String, Object> response = httpServer.join(authToken, playerColor, currGame.gameID());
         if (!response.containsKey("message")) {
             currColor = playerColor;
             System.out.printf("Successfully joined game %s.%n", currGame.gameName());
+
+            // open WebSocket connection
+            try {
+                wsClient = new WSClient();
+            } catch (Exception ex) {
+                System.out.printf("Error: %s%n", ex.getMessage());
+            }
+
+            // send a CONNECT WebSocket message
+            wsClient.connect(authToken, currGame.gameID());
+
+            // transition to gameplay UI
+            state = AppState.GAMEPLAY;
         } else {
             System.out.println(response.get("message"));
         }
-
-        // open WebSocket connection
-        try {
-            ws = new WSClient();
-        } catch (Exception ex) {
-            System.out.printf("Error: %s%n", ex.getMessage());
-        }
-        // send a CONNECT WebSocket message
-        ws.connect(authToken, currGame.gameID());
-        // transition to gameplay UI
-        state = AppState.GAMEPLAY;
     }
 
     private static void handleObserve() {
@@ -219,12 +221,10 @@ public class Main {
         GameData game = currGameList.get(gameNum);
 
         // proceed to observe game
-        drawStartingBoard();
+        drawStartingBoards();
     }
 
-    private static void handleRedraw() {
-
-    }
+    private static void handleRedraw() {}
 
     private static void handleLeave() {
 
@@ -261,7 +261,7 @@ public class Main {
         };
     }
 
-    private static void drawStartingBoard() {
+    private static void drawStartingBoards() {
         ChessBoard board = new ChessBoard();
         board.resetBoard();
         drawBoards(board);
@@ -322,7 +322,7 @@ public class Main {
             printSquare(borderBackgroundColor, borderTextColor, String.format(" %s ", colChar));
         }
         printSquare(borderBackgroundColor, "", EMPTY);
-        System.out.printf("%s%s\n\n", RESET_BG_COLOR, RESET_TEXT_COLOR);
+        System.out.printf("%s%s%s\n\n", RESET_BG_COLOR, RESET_TEXT_COLOR, RESET_TEXT_BOLD_FAINT);
     }
 
     private static void printSquare(String backgroundColor, String textColor, String character) {

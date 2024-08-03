@@ -7,6 +7,7 @@ import service.ClearService;
 import service.GameService;
 import service.UserService;
 import spark.*;
+import websocketserver.WSServer;
 
 import java.util.Map;
 
@@ -14,7 +15,8 @@ public class Server {
     private final GameService gameService;
     private final UserService userService;
     private final ClearService clearService;
-    int successStatus = 200;
+    private final WSServer wsServer;
+    private final int successStatus = 200;
     DatabaseType currDatabaseType = DatabaseType.SQL;
 
     public enum DatabaseType {
@@ -49,18 +51,23 @@ public class Server {
         this.userService = new UserService(userDataAccess, authDataAccess);
         this.gameService = new GameService(authDataAccess, gameDataAccess);
         this.clearService = new ClearService(userDataAccess, authDataAccess, gameDataAccess);
+        this.wsServer = new WSServer();
     }
 
     public Server(UserService userService, GameService gameService, ClearService clearService) {
         this.userService = userService;
         this.gameService = gameService;
         this.clearService = clearService;
+        this.wsServer = new WSServer();
     }
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
 
         Spark.staticFiles.location("web");
+
+        // websocket
+        Spark.webSocket("/ws", WSServer.class);
 
         // Register your endpoints and handle exceptions here.
         Spark.delete("/db", this::clear);

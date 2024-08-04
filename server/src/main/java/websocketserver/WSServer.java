@@ -49,7 +49,15 @@ public class WSServer {
     }
 
     private void connect(Session session, UserGameCommand command) throws IOException {
-        String username = getUsernameFromAuth(command.getAuthToken());
+        String username;
+        try {
+            username = getUsernameFromAuth(command.getAuthToken());
+        } catch (DataAccessException ex) {
+            String notification = String.format("Unable to join game. Error: %s", ex.getMessage());
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, notification);
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
+        }
 
         connections.add(username, session, command.getGameID());
 
@@ -74,7 +82,7 @@ public class WSServer {
             return;
         }
 
-        // send LOAD_GAME message
+        // notifyRootUser LOAD_GAME message
         LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
         session.getRemote().sendString(new Gson().toJson(loadGameMessage));
 
@@ -96,7 +104,7 @@ public class WSServer {
     private void makeMove(String message) {
         var makeMoveCommand = new Gson().fromJson(message, MakeMoveCommand.class);
         // make move
-        // send notification
+        // notifyRootUser notification
     }
 
     private void leave() {
@@ -107,12 +115,8 @@ public class WSServer {
 
     }
 
-    private String getUsernameFromAuth(String authToken) throws IOException {
-        try {
-            AuthData authData = userService.authenticate(authToken);
-            return authData.username();
-        } catch (DataAccessException ex) {
-            throw new IOException(ex.getMessage());
-        }
+    private String getUsernameFromAuth(String authToken) throws DataAccessException {
+        AuthData authData = userService.authenticate(authToken);
+        return authData.username();
     }
 }

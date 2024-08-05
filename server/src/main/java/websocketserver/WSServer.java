@@ -105,7 +105,7 @@ public class WSServer {
         // ensure we are actually playing the game
         ChessGame.TeamColor thisPlayerColor = getThisPlayerColor(username, gameData);
         if (thisPlayerColor == null) {
-            String errorDescription = "%s is not one of the game players.";
+            String errorDescription = String.format("%s is not one of the game players.", username);
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
@@ -226,7 +226,15 @@ public class WSServer {
         // ensure we are actually playing the game
         ChessGame.TeamColor thisPlayerColor = getThisPlayerColor(username, gameData);
         if (thisPlayerColor == null) {
-            String errorDescription = "%s is not one of the game players.";
+            String errorDescription = String.format("%s is not one of the game players.", username);
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
+        }
+
+        // ensure the game isn't already over
+        if (gameData.game().isGameOver()) {
+            String errorDescription = String.format("Game %s has already ended and cannot be resigned.", gameData.gameName());
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;

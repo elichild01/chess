@@ -97,11 +97,14 @@ public class MySQLGameDataAccess implements GameDataAccess {
 
     public void updateGame(GameData upToDateGame) throws DataAccessException {
         // serialize updated game
-        String updatedGameJson = new Gson().toJson(upToDateGame.game());
         int gameID = upToDateGame.gameID();
+        String updatedWhiteUsername = upToDateGame.whiteUsername();
+        String updatedBlackUsername = upToDateGame.blackUsername();
+        String updatedGameName = upToDateGame.gameName();
+        String updatedGameJson = new Gson().toJson(upToDateGame.game());
 
         // update game with username joined
-        String updateStatement = "UPDATE games SET gamejson=? WHERE gameid=?";
-        DatabaseManager.executeUpdate(updateStatement, updatedGameJson, gameID);
+        String updateStatement = "UPDATE games SET whiteusername=?, blackusername=?, gamename=?, gamejson=? WHERE gameid=?";
+        DatabaseManager.executeUpdate(updateStatement, updatedWhiteUsername, updatedBlackUsername, updatedGameName, updatedGameJson, gameID);
     }
 }

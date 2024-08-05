@@ -1,5 +1,6 @@
 package websocketserver;
 
+import chess.ChessGame;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
 
@@ -85,7 +86,7 @@ public class WSServer {
         }
     }
 
-    private void makeMove(Session session, String message) throws IOException {
+    private void makeMove(Session session, String message) throws IOException, DataAccessException {
         MakeMoveCommand command = new Gson().fromJson(message, MakeMoveCommand.class);
 
         // retrieve game, username from database
@@ -114,6 +115,7 @@ public class WSServer {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     String.format("Database could not be updated. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
         }
 
 //        Server sends a LOAD_GAME message to all clients in the game (including the root client) with an updated game.
@@ -123,6 +125,7 @@ public class WSServer {
         } catch (IOException ex) {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
         }
 
 //        Server sends a Notification message to all other clients in that game informing them what move was made.
@@ -133,11 +136,33 @@ public class WSServer {
         } catch (IOException ex) {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
         }
 
 //        If the move results in check, checkmate or stalemate the server sends a Notification message to all clients.
-        // FIXME FIXME FIXME this is the leave-off point
-
+        ChessGame.TeamColor otherPlayerColor = getOtherPlayerColor(username, gameData);
+        String otherPlayerUsername = getOtherPlayerUsername(username, gameData);
+        if (gameData.game().isInCheckmate(otherPlayerColor)) {
+            gameData.game().endGame();
+            gameService.update(gameData);
+            String notificationDescription = String.format("%s has checkmated %s! Game over.", username, otherPlayerUsername);
+            NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notificationDescription);
+            connections.broadcast("", notificationMessage, gameData.gameID());
+            return;
+        }
+        if (gameData.game().isInStalemate(otherPlayerColor)) {
+            gameData.game().endGame();
+            gameService.update(gameData);
+            String notificationDescription = String.format("%s and %s are in stalemate! Game over.", username, otherPlayerUsername);
+            NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notificationDescription);
+            connections.broadcast("", notificationMessage, gameData.gameID());
+            return;
+        }
+        if (gameData.game().isInCheck(otherPlayerColor)) {
+            String notificationDescription = String.format("%s has put %s in check!", username, otherPlayerUsername);
+            NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notificationDescription);
+            connections.broadcast("", notificationMessage, gameData.gameID());
+        }
     }
 
     private void leave(Session session, UserGameCommand command) {
@@ -170,5 +195,25 @@ public class WSServer {
         ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: no game found with gameID %d", command.getGameID()));
         session.getRemote().sendString(new Gson().toJson(errorMessage));
         return null;
+    }
+
+    private ChessGame.TeamColor getOtherPlayerColor(String myUsername, GameData gameData) throws IOException {
+        if (myUsername.equals(gameData.whiteUsername())) {
+            return ChessGame.TeamColor.BLACK;
+        } else if (myUsername.equals(gameData.blackUsername())) {
+            return ChessGame.TeamColor.WHITE;
+        } else {
+            throw new IOException("Move attempted by username not in game.");
+        }
+    }
+
+    private String getOtherPlayerUsername(String myUsername, GameData gameData) throws IOException {
+        if (myUsername.equals(gameData.whiteUsername())) {
+            return gameData.blackUsername();
+        } else if (myUsername.equals(gameData.blackUsername())) {
+            return gameData.whiteUsername();
+        } else {
+            throw new IOException("Move attempted by username not in game.");
+        }
     }
 }

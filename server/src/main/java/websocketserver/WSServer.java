@@ -1,5 +1,6 @@
 package websocketserver;
 
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 
 import dataaccess.DataAccessException;
@@ -42,9 +43,9 @@ public class WSServer {
         var command = new Gson().fromJson(message, UserGameCommand.class);
         switch (command.getCommandType()) {
             case CONNECT -> connect(session, command);
-            case MAKE_MOVE -> makeMove(message);
-            case LEAVE -> leave();
-            case RESIGN -> resign();
+            case MAKE_MOVE -> makeMove(session, message);
+            case LEAVE -> leave(session, command);
+            case RESIGN -> resign(session, command);
         }
     }
 
@@ -61,26 +62,7 @@ public class WSServer {
 
         connections.add(username, session, command.getGameID());
 
-        // load the requested game
-        Collection<GameData> gameList;
-        try {
-            gameList = gameService.list(new ListRequest(command.getAuthToken())).games();
-        } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
-        }
-        GameData game = null;
-        for (GameData currGame : gameList) {
-            if (currGame.gameID() == command.getGameID()) {
-                game = currGame;
-            }
-        }
-        if (game == null) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: Game not found.");
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
-        }
+        GameData game = retrieveGameFromDatabase(session, command);
 
         // notifyRootUser LOAD_GAME message
         LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
@@ -101,22 +83,103 @@ public class WSServer {
         connections.broadcast(username, notificationMessage, game.gameID());
     }
 
-    private void makeMove(String message) {
-        var makeMoveCommand = new Gson().fromJson(message, MakeMoveCommand.class);
-        // make move
-        // notifyRootUser notification
+    private void makeMove(Session session, String message) throws IOException {
+        MakeMoveCommand command = new Gson().fromJson(message, MakeMoveCommand.class);
+
+        // retrieve game, username from database
+        GameData gameData;
+        String username;
+        try {
+            username = getUsernameFromAuth(command.getAuthToken());
+            gameData = retrieveGameFromDatabase(session, command);
+        } catch (DataAccessException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
+        }
+
+//        Server verifies the validity of the move.
+//        Game is updated to represent the move in the database.
+        try {
+            gameData.game().makeMove(command.getMove());
+        } catch (InvalidMoveException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
+        }
+
+//        Server sends a LOAD_GAME message to all clients in the game (including the root client) with an updated game.
+        try {
+            LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData);
+            connections.broadcast("", loadGameMessage, gameData.gameID());
+        } catch (IOException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+        }
+
+//        Server sends a Notification message to all other clients in that game informing them what move was made.
+        try {
+            String moveDescription = String.format("%s has made move %s", username, command.getMove());
+            NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, moveDescription);
+            connections.broadcast(username, notificationMessage, gameData.gameID());
+        } catch (IOException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+        }
+
+//        If the move results in check, checkmate or stalemate the server sends a Notification message to all clients.
+        // FIXME FIXME FIXME this is the leave-off point
+
     }
 
-    private void leave() {
+    private void leave(Session session, UserGameCommand command) {
 
     }
 
-    private void resign() {
+    private void resign(Session session, UserGameCommand command) {
 
     }
 
     private String getUsernameFromAuth(String authToken) throws DataAccessException {
         AuthData authData = userService.authenticate(authToken);
         return authData.username();
+    }
+
+    private GameData retrieveGameFromDatabase(Session session, UserGameCommand command) throws IOException {
+        Collection<GameData> gameList;
+        try {
+            gameList = gameService.list(new ListRequest(command.getAuthToken())).games();
+        } catch (DataAccessException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            throw new IOException(ex.getMessage());
+        }
+        for (GameData currGame : gameList) {
+            if (currGame.gameID() == command.getGameID()) {
+                return currGame;
+            }
+        }
+        throw new IOException("No game found with that gameID");
+
+        // load the requested game
+//        Collection<GameData> gameList;
+//        try {
+//            gameList = gameService.list(new ListRequest(command.getAuthToken())).games();
+//        } catch (DataAccessException ex) {
+//            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+//            session.getRemote().sendString(new Gson().toJson(errorMessage));
+//            return;
+//        }
+//        GameData game = null;
+//        for (GameData currGame : gameList) {
+//            if (currGame.gameID() == command.getGameID()) {
+//                game = currGame;
+//            }
+//        }
+//        if (game == null) {
+//            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: Game not found.");
+//            session.getRemote().sendString(new Gson().toJson(errorMessage));
+//            return;
+//        }
     }
 }

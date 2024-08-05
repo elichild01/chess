@@ -169,5 +169,4 @@ public class WSClient extends Endpoint {
             };
         }
     }
-
 }

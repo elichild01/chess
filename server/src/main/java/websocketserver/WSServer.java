@@ -64,23 +64,25 @@ public class WSServer {
 
         GameData game = retrieveGameFromDatabase(session, command);
 
-        // notifyRootUser LOAD_GAME message
-        LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
-        session.getRemote().sendString(new Gson().toJson(loadGameMessage));
+        if (game != null) {
+            // notifyRootUser LOAD_GAME message
+            LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
+            session.getRemote().sendString(new Gson().toJson(loadGameMessage));
 
-        // notify other clients of connection
-        String gameRole;
-        if (game.whiteUsername().equals(username)) {
-            gameRole = "playing white.";
-        } else if (game.blackUsername().equals(username)) {
-            gameRole = "playing black.";
-        } else {
-            gameRole = "as an observer.";
+            // notify other clients of connection
+            String gameRole;
+            if (game.whiteUsername().equals(username)) {
+                gameRole = "playing white.";
+            } else if (game.blackUsername().equals(username)) {
+                gameRole = "playing black.";
+            } else {
+                gameRole = "as an observer.";
+            }
+            String notification = String.format("%s has joined the game %s", username, gameRole);
+            NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notification);
+
+            connections.broadcast(username, notificationMessage, game.gameID());
         }
-        String notification = String.format("%s has joined the game %s", username, gameRole);
-        NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notification);
-
-        connections.broadcast(username, notificationMessage, game.gameID());
     }
 
     private void makeMove(Session session, String message) throws IOException {
@@ -159,27 +161,8 @@ public class WSServer {
                 return currGame;
             }
         }
-        throw new IOException("No game found with that gameID");
-
-        // load the requested game
-//        Collection<GameData> gameList;
-//        try {
-//            gameList = gameService.list(new ListRequest(command.getAuthToken())).games();
-//        } catch (DataAccessException ex) {
-//            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-//            session.getRemote().sendString(new Gson().toJson(errorMessage));
-//            return;
-//        }
-//        GameData game = null;
-//        for (GameData currGame : gameList) {
-//            if (currGame.gameID() == command.getGameID()) {
-//                game = currGame;
-//            }
-//        }
-//        if (game == null) {
-//            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "Error: Game not found.");
-//            session.getRemote().sendString(new Gson().toJson(errorMessage));
-//            return;
-//        }
+        ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: no game found with gameID %d", command.getGameID()));
+        session.getRemote().sendString(new Gson().toJson(errorMessage));
+        return null;
     }
 }

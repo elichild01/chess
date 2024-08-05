@@ -165,12 +165,55 @@ public class WSServer {
         }
     }
 
-    private void leave(Session session, UserGameCommand command) {
+    private void leave(Session session, UserGameCommand command) throws IOException, DataAccessException {
+        // retrieve game, username from database
+        String username;
+        GameData gameData;
+        try {
+            username = getUsernameFromAuth(command.getAuthToken());
+            gameData = retrieveGameFromDatabase(session, command);
+        } catch (DataAccessException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
+        }
 
+        // remove user from game locally and in database
+        ChessGame.TeamColor currUserColor = getThisPlayerColor(username, gameData);
+        String otherPlayerUsername = getOtherPlayerUsername(username, gameData);
+        GameData updatedGame;
+        if (currUserColor == ChessGame.TeamColor.WHITE) {
+            updatedGame = new GameData(gameData.gameID(), null, otherPlayerUsername, gameData.gameName(), gameData.game());
+        } else {
+            updatedGame = new GameData(gameData.gameID(), otherPlayerUsername, null, gameData.gameName(), gameData.game());
+        }
+        gameService.update(updatedGame);
+
+        // notify all users
+        String notificationDescription = String.format("%s has left the game.", username);
+        NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notificationDescription);
+        connections.broadcast(username, notificationMessage, gameData.gameID());
     }
 
-    private void resign(Session session, UserGameCommand command) {
+    private void resign(Session session, UserGameCommand command) throws IOException, DataAccessException {
+        // retrieve game, username from database
+        String username;
+        GameData gameData;
+        try {
+            username = getUsernameFromAuth(command.getAuthToken());
+            gameData = retrieveGameFromDatabase(session, command);
+        } catch (DataAccessException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
+        }
 
+        gameData.game().endGame();
+        gameService.update(gameData);
+        String otherPlayerUsername = getOtherPlayerUsername(username, gameData);
+        String notificationDescription = String.format("%s has resigned to %s! Game over.", username, otherPlayerUsername);
+        NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notificationDescription);
+        connections.broadcast("", notificationMessage, gameData.gameID());
     }
 
     private String getUsernameFromAuth(String authToken) throws DataAccessException {
@@ -202,6 +245,16 @@ public class WSServer {
             return ChessGame.TeamColor.BLACK;
         } else if (myUsername.equals(gameData.blackUsername())) {
             return ChessGame.TeamColor.WHITE;
+        } else {
+            throw new IOException("Move attempted by username not in game.");
+        }
+    }
+
+    private ChessGame.TeamColor getThisPlayerColor(String myUsername, GameData gameData) throws IOException {
+        if (myUsername.equals(gameData.whiteUsername())) {
+            return ChessGame.TeamColor.WHITE;
+        } else if (myUsername.equals(gameData.blackUsername())) {
+            return ChessGame.TeamColor.BLACK;
         } else {
             throw new IOException("Move attempted by username not in game.");
         }

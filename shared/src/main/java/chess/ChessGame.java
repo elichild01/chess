@@ -139,7 +139,7 @@ public class ChessGame {
         }
         if (isValidMove(move)) {
             ChessPiece piece = board.getPiece(move.getStartPosition());
-            if (piece.getTeamColor() != teamTurn) { throw new InvalidMoveException(); }
+            if (piece.getTeamColor() != teamTurn) { throw new InvalidMoveException("Piece moved out of turn."); }
             if (move.getPromotionPiece() != null) {
                 piece = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
             }

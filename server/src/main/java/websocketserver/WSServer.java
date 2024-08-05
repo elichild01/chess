@@ -95,6 +95,7 @@ public class WSServer {
         try {
             username = getUsernameFromAuth(command.getAuthToken());
             gameData = retrieveGameFromDatabase(session, command);
+            if (gameData == null) { throw new DataAccessException("game not found"); }
         } catch (DataAccessException ex) {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
@@ -103,7 +104,11 @@ public class WSServer {
 
 //        Server verifies the validity of the move.
 //        Game is updated to represent the move in the database.
+        ChessGame.TeamColor thisPlayerColor = getThisPlayerColor(username, gameData);
         try {
+            if (gameData.game().getBoard().getPiece(command.getMove().getStartPosition()).getTeamColor() != thisPlayerColor) {
+                throw new InvalidMoveException("Can't move other player's piece.");
+            }
             gameData.game().makeMove(command.getMove());
             gameService.update(gameData);
         } catch (InvalidMoveException ex) {
@@ -172,6 +177,7 @@ public class WSServer {
         try {
             username = getUsernameFromAuth(command.getAuthToken());
             gameData = retrieveGameFromDatabase(session, command);
+            if (gameData == null) { throw new DataAccessException("game not found"); }
         } catch (DataAccessException ex) {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
@@ -202,6 +208,7 @@ public class WSServer {
         try {
             username = getUsernameFromAuth(command.getAuthToken());
             gameData = retrieveGameFromDatabase(session, command);
+            if (gameData == null) { throw new DataAccessException("game not found"); }
         } catch (DataAccessException ex) {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));

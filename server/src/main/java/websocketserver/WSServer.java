@@ -102,9 +102,17 @@ public class WSServer {
             return;
         }
 
+        // ensure we are actually playing the game
+        ChessGame.TeamColor thisPlayerColor = getThisPlayerColor(username, gameData);
+        if (thisPlayerColor == null) {
+            String errorDescription = "%s is not one of the game players.";
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
+        }
+
 //        Server verifies the validity of the move.
 //        Game is updated to represent the move in the database.
-        ChessGame.TeamColor thisPlayerColor = getThisPlayerColor(username, gameData);
         try {
             if (gameData.game().getBoard().getPiece(command.getMove().getStartPosition()).getTeamColor() != thisPlayerColor) {
                 throw new InvalidMoveException("Can't move other player's piece.");
@@ -257,13 +265,13 @@ public class WSServer {
         }
     }
 
-    private ChessGame.TeamColor getThisPlayerColor(String myUsername, GameData gameData) throws IOException {
+    private ChessGame.TeamColor getThisPlayerColor(String myUsername, GameData gameData) {
         if (myUsername.equals(gameData.whiteUsername())) {
             return ChessGame.TeamColor.WHITE;
         } else if (myUsername.equals(gameData.blackUsername())) {
             return ChessGame.TeamColor.BLACK;
         } else {
-            throw new IOException("Move attempted by username not in game.");
+            return null;
         }
     }
 

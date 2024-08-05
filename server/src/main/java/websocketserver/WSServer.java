@@ -223,6 +223,15 @@ public class WSServer {
             return;
         }
 
+        // ensure we are actually playing the game
+        ChessGame.TeamColor thisPlayerColor = getThisPlayerColor(username, gameData);
+        if (thisPlayerColor == null) {
+            String errorDescription = "%s is not one of the game players.";
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+            return;
+        }
+
         gameData.game().endGame();
         gameService.update(gameData);
         String otherPlayerUsername = getOtherPlayerUsername(username, gameData);

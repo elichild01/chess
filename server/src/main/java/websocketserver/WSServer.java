@@ -103,7 +103,7 @@ public class WSServer {
         }
 
         // ensure we are actually playing the game
-        ChessGame.TeamColor thisPlayerColor = getThisPlayerColor(username, gameData);
+        ChessGame.TeamColor thisPlayerColor = getPlayerColor(username, gameData);
         if (thisPlayerColor == null) {
             String errorDescription = String.format("%s is not one of the game players.", username);
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
@@ -153,7 +153,8 @@ public class WSServer {
         }
 
 //        If the move results in check, checkmate or stalemate the server sends a Notification message to all clients.
-        ChessGame.TeamColor otherPlayerColor = getOtherPlayerColor(username, gameData);
+        ChessGame.TeamColor otherPlayerColor = getPlayerColor(username, gameData) == ChessGame.TeamColor.WHITE ?
+                ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
         String otherPlayerUsername = getOtherPlayerUsername(username, gameData);
         if (gameData.game().isInCheckmate(otherPlayerColor)) {
             gameData.game().endGame();
@@ -192,21 +193,23 @@ public class WSServer {
             return;
         }
 
-        // remove user from game locally and in database
-        ChessGame.TeamColor currUserColor = getThisPlayerColor(username, gameData);
-        String otherPlayerUsername = getOtherPlayerUsername(username, gameData);
-        GameData updatedGame;
+        // remove user from game locally and in database if user is player
+        ChessGame.TeamColor currUserColor = getPlayerColor(username, gameData);
+        GameData updatedGame = null;
         if (currUserColor == ChessGame.TeamColor.WHITE) {
-            updatedGame = new GameData(gameData.gameID(), null, otherPlayerUsername, gameData.gameName(), gameData.game());
-        } else {
-            updatedGame = new GameData(gameData.gameID(), otherPlayerUsername, null, gameData.gameName(), gameData.game());
+            updatedGame = new GameData(gameData.gameID(), null, gameData.blackUsername(), gameData.gameName(), gameData.game());
+        } else if (currUserColor == ChessGame.TeamColor.BLACK) {
+            updatedGame = new GameData(gameData.gameID(), gameData.whiteUsername(), null, gameData.gameName(), gameData.game());
         }
-        gameService.update(updatedGame);
+        if (updatedGame != null) {
+            gameService.update(updatedGame);
+        }
 
         // notify all users
         String notificationDescription = String.format("%s has left the game.", username);
         NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notificationDescription);
         connections.broadcast(username, notificationMessage, gameData.gameID());
+        connections.remove(username);
     }
 
     private void resign(Session session, UserGameCommand command) throws IOException, DataAccessException {
@@ -224,7 +227,7 @@ public class WSServer {
         }
 
         // ensure we are actually playing the game
-        ChessGame.TeamColor thisPlayerColor = getThisPlayerColor(username, gameData);
+        ChessGame.TeamColor thisPlayerColor = getPlayerColor(username, gameData);
         if (thisPlayerColor == null) {
             String errorDescription = String.format("%s is not one of the game players.", username);
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
@@ -240,6 +243,7 @@ public class WSServer {
             return;
         }
 
+        // end game, update in database, notify all userss
         gameData.game().endGame();
         gameService.update(gameData);
         String otherPlayerUsername = getOtherPlayerUsername(username, gameData);
@@ -272,17 +276,7 @@ public class WSServer {
         return null;
     }
 
-    private ChessGame.TeamColor getOtherPlayerColor(String myUsername, GameData gameData) throws IOException {
-        if (myUsername.equals(gameData.whiteUsername())) {
-            return ChessGame.TeamColor.BLACK;
-        } else if (myUsername.equals(gameData.blackUsername())) {
-            return ChessGame.TeamColor.WHITE;
-        } else {
-            throw new IOException("Move attempted by username not in game.");
-        }
-    }
-
-    private ChessGame.TeamColor getThisPlayerColor(String myUsername, GameData gameData) {
+    private ChessGame.TeamColor getPlayerColor(String myUsername, GameData gameData) {
         if (myUsername.equals(gameData.whiteUsername())) {
             return ChessGame.TeamColor.WHITE;
         } else if (myUsername.equals(gameData.blackUsername())) {
@@ -297,8 +291,7 @@ public class WSServer {
             return gameData.blackUsername();
         } else if (myUsername.equals(gameData.blackUsername())) {
             return gameData.whiteUsername();
-        } else {
-            throw new IOException("Move attempted by username not in game.");
         }
+        throw new IOException("App has attempted to retrieve opponent for observer.");
     }
 }

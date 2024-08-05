@@ -272,7 +272,11 @@ public class Main {
     }
 
     private static void handleResign() {
-
+        try {
+            wsClient.resign(authToken, currGame.gameID());
+        } catch (IOException err) {
+            System.out.printf("Could not leave game %s. %s%n", currGame.gameName(), err.getMessage());
+        }
     }
 
     private static void handleHighlight() {

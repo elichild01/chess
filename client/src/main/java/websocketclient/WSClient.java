@@ -26,21 +26,19 @@ public class WSClient extends Endpoint {
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
         this.session = container.connectToServer(this, uri);
 
-        this.session.addMessageHandler(new MessageHandler.Whole<String>() {
-            public void onMessage(String message) {
-                ServerMessage serverMessage;
-                try {
-                    serverMessage = new Gson().fromJson(message, ServerMessage.class);
-                } catch (Exception ex) {
-                    System.out.printf("Error in onMessage: %s%n", ex.getMessage());
-                    return;
-                }
+        this.session.addMessageHandler((MessageHandler.Whole<String>) message -> {
+            ServerMessage serverMessage;
+            try {
+                serverMessage = new Gson().fromJson(message, ServerMessage.class);
+            } catch (Exception ex) {
+                System.out.printf("Error in onMessage: %s%n", ex.getMessage());
+                return;
+            }
 
-                switch (serverMessage.getServerMessageType()) {
-                    case NOTIFICATION -> handleNotification(message);
-                    case LOAD_GAME -> handleLoadGame(message);
-                    case ERROR -> handleError(message);
-                }
+            switch (serverMessage.getServerMessageType()) {
+                case NOTIFICATION -> handleNotification(message);
+                case LOAD_GAME -> handleLoadGame(message);
+                case ERROR -> handleError(message);
             }
         });
     }

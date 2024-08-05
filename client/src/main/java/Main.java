@@ -12,7 +12,7 @@ import static websocketclient.WSClient.drawBoard;
 
 public class Main {
     private static boolean finished;
-    private static AppState state = AppState.PRELOGIN;
+    private static AppState state = AppState.NOT_LOGGED_IN;
     private static ServerFacade httpServer;
     private static Scanner scanner;
     private static String authToken;
@@ -54,7 +54,7 @@ public class Main {
                     default -> handleUnrecognizedOption();
                 }
             }
-            if (state == AppState.GAMEPLAY) {
+            if (state == AppState.IN_GAMEPLAY) {
                 drawBoard(currGame.game().getBoard(), currColor == ChessGame.TeamColor.BLACK);
             }
         }
@@ -87,9 +87,9 @@ public class Main {
                 """;
 
         switch (state) {
-            case PRELOGIN -> System.out.print(preLoginHelp);
-            case POSTLOGIN -> System.out.print(postLoginHelp);
-            case GAMEPLAY -> System.out.print(gamePlayHelp);
+            case NOT_LOGGED_IN -> System.out.print(preLoginHelp);
+            case LOGGED_IN -> System.out.print(postLoginHelp);
+            case IN_GAMEPLAY -> System.out.print(gamePlayHelp);
         }
     }
 
@@ -109,7 +109,7 @@ public class Main {
         Map<String, Object> response = httpServer.login(username, password);
         if (!response.containsKey("message")) {
             authToken = (String) response.get("authToken");
-            state = AppState.POSTLOGIN;
+            state = AppState.LOGGED_IN;
             System.out.printf("Successfully logged in user %s.%n", response.get("username"));
         } else {
             System.out.println(response.get("message"));
@@ -130,7 +130,7 @@ public class Main {
         Map<String, Object> response = httpServer.register(username, password, email);
         if (!response.containsKey("message")) {
             authToken = (String) response.get("authToken");
-            state = AppState.POSTLOGIN;
+            state = AppState.LOGGED_IN;
             System.out.printf("Successfully logged in user %s.%n", response.get("username"));
         } else {
             System.out.println(response.get("message"));
@@ -141,7 +141,7 @@ public class Main {
     private static void handleLogout() throws IOException {
         Map<String, Object> response = httpServer.logout(authToken);
         if (!response.containsKey("message")) {
-            state = AppState.PRELOGIN;
+            state = AppState.NOT_LOGGED_IN;
             System.out.println("Successfully logged out.");
         } else {
             System.out.println(response.get("message"));
@@ -216,7 +216,7 @@ public class Main {
             wsClient.connect(authToken, currGame.gameID());
 
             // transition to gameplay UI
-            state = AppState.GAMEPLAY;
+            state = AppState.IN_GAMEPLAY;
         } else {
             System.out.println(response.get("message"));
             handleHelp();
@@ -246,7 +246,7 @@ public class Main {
         // Leave game
         currGame = null;
         currColor = null;
-        state = AppState.POSTLOGIN;
+        state = AppState.LOGGED_IN;
     }
 
     private static void handleMove() {
@@ -285,16 +285,16 @@ public class Main {
     }
 
     private enum AppState {
-        PRELOGIN,
-        POSTLOGIN,
-        GAMEPLAY
+        NOT_LOGGED_IN,
+        LOGGED_IN,
+        IN_GAMEPLAY
     }
 
     private static String[] getUserOptions(AppState state) {
         return switch (state) {
-            case PRELOGIN -> new String[]{"help", "quit", "login", "register"};
-            case POSTLOGIN -> new String[]{"help", "logout", "create", "list", "play", "observe"};
-            case GAMEPLAY -> new String[]{"help", "redraw", "leave", "move", "resign", "highlight"};
+            case NOT_LOGGED_IN -> new String[]{"help", "quit", "login", "register"};
+            case LOGGED_IN -> new String[]{"help", "logout", "create", "list", "play", "observe"};
+            case IN_GAMEPLAY -> new String[]{"help", "redraw", "leave", "move", "resign", "highlight"};
         };
     }
 

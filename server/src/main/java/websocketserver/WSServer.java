@@ -10,7 +10,6 @@ import model.GameData;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.eclipse.jetty.websocket.api.*;
 import requestresult.ListRequest;
-import service.ClearService;
 import service.GameService;
 import service.UserService;
 import websocket.commands.MakeMoveCommand;
@@ -29,14 +28,12 @@ public class WSServer {
     private final ConnectionManager connections;
     private final UserService userService;
     private final GameService gameService;
-    private final ClearService clearService;
 
 
-    public WSServer(UserService userService, GameService gameService, ClearService clearService) {
+    public WSServer(UserService userService, GameService gameService) {
         this.connections = new ConnectionManager();
         this.userService = userService;
         this.gameService = gameService;
-        this.clearService = clearService;
     }
 
     @OnWebSocketMessage
@@ -71,19 +68,23 @@ public class WSServer {
             session.getRemote().sendString(new Gson().toJson(loadGameMessage));
 
             // notify other clients of connection
-            String gameRole;
-            if (game.whiteUsername().equals(username)) {
-                gameRole = "playing white.";
-            } else if (game.blackUsername().equals(username)) {
-                gameRole = "playing black.";
-            } else {
-                gameRole = "as an observer.";
-            }
-            String notification = String.format("%s has joined the game %s", username, gameRole);
-            NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notification);
+            NotificationMessage notificationMessage = getConnectionDescriptionMessage(game, username);
 
             connections.broadcast(username, notificationMessage, game.gameID());
         }
+    }
+
+    private static NotificationMessage getConnectionDescriptionMessage(GameData game, String username) {
+        String gameRole;
+        if (game.whiteUsername().equals(username)) {
+            gameRole = "playing white.";
+        } else if (game.blackUsername().equals(username)) {
+            gameRole = "playing black.";
+        } else {
+            gameRole = "as an observer.";
+        }
+        String notification = String.format("%s has joined the game %s", username, gameRole);
+        return new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, notification);
     }
 
     private void makeMove(Session session, String message) throws IOException, DataAccessException {
@@ -243,7 +244,7 @@ public class WSServer {
             return;
         }
 
-        // end game, update in database, notify all userss
+        // end game, update in database, notify all users
         gameData.game().endGame();
         gameService.update(gameData);
         String otherPlayerUsername = getOtherPlayerUsername(username, gameData);

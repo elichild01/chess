@@ -51,14 +51,14 @@ public class Server {
         this.userService = new UserService(userDataAccess, authDataAccess);
         this.gameService = new GameService(authDataAccess, gameDataAccess);
         this.clearService = new ClearService(userDataAccess, authDataAccess, gameDataAccess);
-        this.wsServer = new WSServer(this.userService, this.gameService, this.clearService);
+        this.wsServer = new WSServer(this.userService, this.gameService);
     }
 
     public Server(UserService userService, GameService gameService, ClearService clearService) {
         this.userService = userService;
         this.gameService = gameService;
         this.clearService = clearService;
-        this.wsServer = new WSServer(this.userService, this.gameService, this.clearService);
+        this.wsServer = new WSServer(this.userService, this.gameService);
     }
 
     public int run(int desiredPort) {

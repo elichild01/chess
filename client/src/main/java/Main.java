@@ -255,13 +255,14 @@ public class Main {
         String fromSquare = scanner.nextLine();
         System.out.print("Please enter the square you would like to move TO (letter and number, no space, e.g. B3): ");
         String toSquare = scanner.nextLine();
-
-        // FIXME: figure out pawn promotion!
+        System.out.print("If you are promoting a pawn, please enter the piece type you would like to promote to. Otherwise, enter 'NA'.: ");
+        String promotionPiece = scanner.nextLine();
 
         ChessPosition fromPosition = parseSquareInfo(fromSquare);
         ChessPosition toPosition = parseSquareInfo(toSquare);
+        ChessPiece.PieceType promoPieceType = parsePawnPromoInfo(promotionPiece);
 
-        ChessMove move = new ChessMove(fromPosition, toPosition, null);
+        ChessMove move = new ChessMove(fromPosition, toPosition, promoPieceType);
 
         try {
             wsClient.makeMove(authToken, currGame.gameID(), move);
@@ -331,5 +332,16 @@ public class Main {
         int row = Integer.parseInt(rowStr);
 
         return new ChessPosition(row, col);
+    }
+
+    private static ChessPiece.PieceType parsePawnPromoInfo(String promotionInfo) {
+        return switch (promotionInfo.toLowerCase()) {
+//            case "na" -> null;
+            case "queen" -> ChessPiece.PieceType.QUEEN;
+            case "rook" -> ChessPiece.PieceType.ROOK;
+            case "bishop" -> ChessPiece.PieceType.BISHOP;
+            case "knight" -> ChessPiece.PieceType.KNIGHT;
+            default -> null;
+        };
     }
 }

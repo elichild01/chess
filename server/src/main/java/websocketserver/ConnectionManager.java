@@ -2,7 +2,6 @@ package websocketserver;
 
 import com.google.gson.Gson;
 import org.eclipse.jetty.websocket.api.Session;
-import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
@@ -21,7 +20,7 @@ public class ConnectionManager {
         connections.remove(userToRemove);
     }
 
-    public void broadcast(String userToExclude, NotificationMessage notification, int gameID) throws IOException {
+    public void broadcast(String userToExclude, ServerMessage notification, int gameID) throws IOException {
         var removeList = new ArrayList<Connection>();
         for (var c : connections.values()) {
             if (c.session.isOpen()) {
@@ -39,21 +38,21 @@ public class ConnectionManager {
         }
     }
 
-    public void send(String userToExclude, ServerMessage response) throws IOException {
-        var removeList = new ArrayList<Connection>();
-        for (var c : connections.values()) {
-            if (c.session.isOpen()) {
-                if (c.username.equals(userToExclude)) {
-                    c.send(response.toString());
-                }
-            } else {
-                removeList.add(c);
-            }
-        }
-
-        // Clean up any connections that were left open.
-        for (var c : removeList) {
-            connections.remove(c.username);
-        }
-    }
+//    public void notifyRootUser(String userToNotify, ServerMessage response, int gameID) throws IOException {
+//        var removeList = new ArrayList<Connection>();
+//        for (var c : connections.values()) {
+//            if (c.session.isOpen()) {
+//                if (c.username.equals(userToNotify) && c.gameID == gameID) {
+//                    c.send(response.toString());
+//                }
+//            } else {
+//                removeList.add(c);
+//            }
+//        }
+//
+//        // Clean up any connections that were left open.
+//        for (var c : removeList) {
+//            connections.remove(c.username);
+//        }
+//    }
 }

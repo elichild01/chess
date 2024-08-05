@@ -10,4 +10,5 @@ public interface GameDataAccess {
     void deleteAllGames() throws DataAccessException;
     Collection<GameData> listAllGames() throws DataAccessException;
     void joinGame(ChessGame.TeamColor color, int gameID, String username) throws DataAccessException;
+    void updateGame(GameData gameData) throws DataAccessException;
 }

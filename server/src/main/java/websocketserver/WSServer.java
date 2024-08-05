@@ -104,10 +104,16 @@ public class WSServer {
 //        Game is updated to represent the move in the database.
         try {
             gameData.game().makeMove(command.getMove());
+            gameService.update(gameData);
         } catch (InvalidMoveException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    String.format("Move could not be made. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
+        } catch (DataAccessException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    String.format("Database could not be updated. Error: %s", ex.getMessage()));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
         }
 
 //        Server sends a LOAD_GAME message to all clients in the game (including the root client) with an updated game.

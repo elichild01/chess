@@ -46,4 +46,8 @@ public class GameService extends Service {
         gameDataAccess.joinGame(request.playerColor(), request.gameID(), auth.username());
         return new JoinResult();
     }
+
+    public void update(GameData gameData) throws DataAccessException {
+        gameDataAccess.updateGame(gameData);
+    }
 }

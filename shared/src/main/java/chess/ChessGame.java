@@ -13,6 +13,7 @@ import java.util.Objects;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn;
+    private boolean gameOver;
 
     public ChessGame() {
         board = new ChessBoard();
@@ -34,6 +35,14 @@ public class ChessGame {
      */
     public void setTeamTurn(TeamColor team) {
         teamTurn = team;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void endGame() {
+        this.gameOver = true;
     }
 
     /**
@@ -125,6 +134,9 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        if (isGameOver()) {
+            throw new InvalidMoveException("Game is over");
+        }
         if (isValidMove(move)) {
             ChessPiece piece = board.getPiece(move.getStartPosition());
             if (piece.getTeamColor() != teamTurn) { throw new InvalidMoveException(); }
@@ -180,7 +192,7 @@ public class ChessGame {
                 board.setEnPassantVulnerability(null);
             }
         } else {
-            throw new InvalidMoveException();
+            throw new InvalidMoveException("Invalid move.");
         }
     }
 

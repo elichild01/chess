@@ -55,4 +55,8 @@ public class MemoryGameDataAccess implements GameDataAccess {
         }
         games.put(gameID, updatedGame);
     }
+
+    public void updateGame(GameData gameData) {
+        games.put(gameData.gameID(), gameData);
+    }
 }

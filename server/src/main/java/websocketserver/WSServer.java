@@ -98,7 +98,8 @@ public class WSServer {
             gameData = retrieveGameFromDatabase(session, command);
             if (gameData == null) { throw new DataAccessException("game not found"); }
         } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    String.format("Unable to make move. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
@@ -122,7 +123,7 @@ public class WSServer {
             gameService.update(gameData);
         } catch (InvalidMoveException ex) {
             ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
-                    String.format("Move could not be made. Error: %s", ex.getMessage()));
+                    String.format("Invalid move attempted. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         } catch (DataAccessException ex) {
@@ -137,7 +138,8 @@ public class WSServer {
             LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData);
             connections.broadcast("", loadGameMessage, gameData.gameID());
         } catch (IOException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    String.format("Cannot broadcast LOAD_GAME message. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
@@ -148,7 +150,8 @@ public class WSServer {
             NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, moveDescription);
             connections.broadcast(username, notificationMessage, gameData.gameID());
         } catch (IOException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    String.format("Cannot notify other clients of move. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
@@ -189,7 +192,8 @@ public class WSServer {
             gameData = retrieveGameFromDatabase(session, command);
             if (gameData == null) { throw new DataAccessException("game not found"); }
         } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    String.format("Cannot retrieve information from database necessary to leave game. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
@@ -222,7 +226,8 @@ public class WSServer {
             gameData = retrieveGameFromDatabase(session, command);
             if (gameData == null) { throw new DataAccessException("game not found"); }
         } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    String.format("Cannot retrieve necessary information from database to resign. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
@@ -263,7 +268,8 @@ public class WSServer {
         try {
             gameList = gameService.list(new ListRequest(command.getAuthToken())).games();
         } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    String.format("Game cannot be retrieved from database. Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             throw new IOException(ex.getMessage());
         }
@@ -272,7 +278,8 @@ public class WSServer {
                 return currGame;
             }
         }
-        ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: no game found with gameID %d", command.getGameID()));
+        ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                String.format("Error: no game found with gameID %d", command.getGameID()));
         session.getRemote().sendString(new Gson().toJson(errorMessage));
         return null;
     }

@@ -232,12 +232,46 @@ public class Main {
     }
 
     private static void handleObserve() {
+        if (currGameList == null || currGameList.isEmpty()) {
+            System.out.println("You cannot choose a game to observe until you have seen the list of current games. Please enter 'list' first.");
+            handleHelp();
+            return;
+        }
+
+        // get and parse info from user
         System.out.print("Enter number of the game you would like to observe (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
+        scanner.nextLine();
         currColor = null;
 
-//        // observe game
-        // FIXME FIXME FIXME not actually sure yet how to observe from client side
+        GameData selectedGame = currGameList.get(gameNum);
+        if (selectedGame == null) {
+            System.out.println("Selection invalid.");
+            handleHelp();
+            return;
+        }
+
+        // observe game
+        // open WebSocket connection
+        try {
+            wsClient = new WSClient();
+            wsClient.setCurrGame(selectedGame);
+        } catch (Exception ex) {
+            System.out.printf("Error: %s%n", ex.getMessage());
+            return;
+        }
+
+        System.out.printf("Successfully joined game %s as an observer.%n", wsClient.getCurrGame().gameName());
+
+        try {
+            // send a CONNECT WebSocket message
+            wsClient.connect(authToken, wsClient.getCurrGame().gameID(), true);
+        } catch (IOException ex) {
+            System.out.println("Error. Could not connect to server.");
+        }
+
+        // transition to gameplay UI
+        state = AppState.IN_GAMEPLAY;
     }
 
     private static void handleRedraw() {

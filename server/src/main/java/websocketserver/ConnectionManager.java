@@ -37,22 +37,4 @@ public class ConnectionManager {
             connections.remove(c.username);
         }
     }
-
-//    public void notifyRootUser(String userToNotify, ServerMessage response, int gameID) throws IOException {
-//        var removeList = new ArrayList<Connection>();
-//        for (var c : connections.values()) {
-//            if (c.session.isOpen()) {
-//                if (c.username.equals(userToNotify) && c.gameID == gameID) {
-//                    c.send(response.toString());
-//                }
-//            } else {
-//                removeList.add(c);
-//            }
-//        }
-//
-//        // Clean up any connections that were left open.
-//        for (var c : removeList) {
-//            connections.remove(c.username);
-//        }
-//    }
 }

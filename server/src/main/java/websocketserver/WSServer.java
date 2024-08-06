@@ -90,24 +90,14 @@ public class WSServer {
     private void makeMove(Session session, String message) throws IOException, DataAccessException {
         MakeMoveCommand command = new Gson().fromJson(message, MakeMoveCommand.class);
 
-        // retrieve game, username from database
-        GameData gameData;
-        String username;
-        try {
-            username = getUsernameFromAuth(command.getAuthToken());
-            gameData = retrieveGameFromDatabase(session, command);
-            if (gameData == null) { throw new DataAccessException("game not found"); }
-        } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
-        }
+        GameData gameData = getGameFromDatabaseHandlingExceptions(session, command);
+        String username = getUsernameFromDatabaseHandlingExceptions(session, command);
 
-        // ensure we are actually playing the game
         ChessGame.TeamColor thisPlayerColor = getPlayerColor(username, gameData);
-        if (thisPlayerColor == null) {
-            String errorDescription = String.format("%s is not one of the game players.", username);
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
+        try {
+            ensureActuallyPlayingGame(session, username, gameData, thisPlayerColor);
+        } catch (IOException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
@@ -181,18 +171,8 @@ public class WSServer {
     }
 
     private void leave(Session session, UserGameCommand command) throws IOException, DataAccessException {
-        // retrieve game, username from database
-        String username;
-        GameData gameData;
-        try {
-            username = getUsernameFromAuth(command.getAuthToken());
-            gameData = retrieveGameFromDatabase(session, command);
-            if (gameData == null) { throw new DataAccessException("game not found"); }
-        } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
-        }
+        GameData gameData = getGameFromDatabaseHandlingExceptions(session, command);
+        String username = getUsernameFromDatabaseHandlingExceptions(session, command);
 
         // remove user from game locally and in database if user is player
         ChessGame.TeamColor currUserColor = getPlayerColor(username, gameData);
@@ -214,24 +194,13 @@ public class WSServer {
     }
 
     private void resign(Session session, UserGameCommand command) throws IOException, DataAccessException {
-        // retrieve game, username from database
-        String username;
-        GameData gameData;
-        try {
-            username = getUsernameFromAuth(command.getAuthToken());
-            gameData = retrieveGameFromDatabase(session, command);
-            if (gameData == null) { throw new DataAccessException("game not found"); }
-        } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
-        }
+        GameData gameData = getGameFromDatabaseHandlingExceptions(session, command);
+        String username = getUsernameFromDatabaseHandlingExceptions(session, command);
 
-        // ensure we are actually playing the game
-        ChessGame.TeamColor thisPlayerColor = getPlayerColor(username, gameData);
-        if (thisPlayerColor == null) {
-            String errorDescription = String.format("%s is not one of the game players.", username);
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
+        try {
+            ensureActuallyPlayingGame(session, username, gameData, getPlayerColor(username, gameData));
+        } catch (IOException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
             session.getRemote().sendString(new Gson().toJson(errorMessage));
             return;
         }
@@ -272,7 +241,8 @@ public class WSServer {
                 return currGame;
             }
         }
-        ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: no game found with gameID %d", command.getGameID()));
+        ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                String.format("Error: no game found with gameID %d", command.getGameID()));
         session.getRemote().sendString(new Gson().toJson(errorMessage));
         return null;
     }
@@ -294,5 +264,49 @@ public class WSServer {
             return gameData.whiteUsername();
         }
         throw new IOException("App has attempted to retrieve opponent for observer.");
+    }
+
+    private void ensureActuallyPlayingGame(Session session, String username, GameData gameData,
+                                           ChessGame.TeamColor thisPlayerColor) throws IOException {
+        if (thisPlayerColor == null) {
+            String errorDescription = String.format("%s is not one of the game players.", username);
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+        }
+    }
+
+    private GameData getGameFromDatabaseHandlingExceptions(Session session, UserGameCommand command) {
+        // retrieve game from database
+        GameData gameData = null;
+        try {
+            gameData = retrieveGameFromDatabase(session, command);
+            if (gameData == null) {
+                throw new DataAccessException("game not found");
+            }
+        } catch (DataAccessException | IOException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            try {
+                session.getRemote().sendString(new Gson().toJson(errorMessage));
+            } catch (IOException subEx) {
+                System.out.printf("Can't even send an error message. Error: %s.%n", subEx.getMessage());
+            }
+        }
+        return gameData;
+    }
+
+    private String getUsernameFromDatabaseHandlingExceptions(Session session, UserGameCommand command) {
+        // retrieve username from database
+        String username = null;
+        try {
+            username = getUsernameFromAuth(command.getAuthToken());
+        } catch (DataAccessException ex) {
+            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
+            try {
+                session.getRemote().sendString(new Gson().toJson(errorMessage));
+            } catch (IOException subEx) {
+                System.out.printf("Can't even send an error message. Error: %s.%n", subEx.getMessage());
+            }
+        }
+        return username;
     }
 }

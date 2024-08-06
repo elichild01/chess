@@ -97,9 +97,7 @@ public class WSServer {
         try {
             ensureActuallyPlayingGame(session, username, gameData, thisPlayerColor);
         } catch (IOException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
+            sendGenericErrorMessage(session, ex.getMessage());
         }
 
 //        Server verifies the validity of the move.
@@ -127,9 +125,7 @@ public class WSServer {
             LoadGameMessage loadGameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData);
             connections.broadcast("", loadGameMessage, gameData.gameID());
         } catch (IOException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
+            sendGenericErrorMessage(session, ex.getMessage());
         }
 
 //        Server sends a Notification message to all other clients in that game informing them what move was made.
@@ -138,9 +134,7 @@ public class WSServer {
             NotificationMessage notificationMessage = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, moveDescription);
             connections.broadcast(username, notificationMessage, gameData.gameID());
         } catch (IOException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
+            sendGenericErrorMessage(session, ex.getMessage());
         }
 
 //        If the move results in check, checkmate or stalemate the server sends a Notification message to all clients.
@@ -200,17 +194,13 @@ public class WSServer {
         try {
             ensureActuallyPlayingGame(session, username, gameData, getPlayerColor(username, gameData));
         } catch (IOException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
+            sendGenericErrorMessage(session, ex.getMessage());
         }
 
         // ensure the game isn't already over
         if (gameData.game().isGameOver()) {
             String errorDescription = String.format("Game %s has already ended and cannot be resigned.", gameData.gameName());
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", errorDescription));
-            session.getRemote().sendString(new Gson().toJson(errorMessage));
-            return;
+            sendGenericErrorMessage(session, errorDescription);
         }
 
         // end game, update in database, notify all users
@@ -300,13 +290,17 @@ public class WSServer {
         try {
             username = getUsernameFromAuth(command.getAuthToken());
         } catch (DataAccessException ex) {
-            ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", ex.getMessage()));
-            try {
-                session.getRemote().sendString(new Gson().toJson(errorMessage));
-            } catch (IOException subEx) {
-                System.out.printf("Can't even send an error message. Error: %s.%n", subEx.getMessage());
-            }
+            sendGenericErrorMessage(session, ex.getMessage());
         }
         return username;
+    }
+
+    private void sendGenericErrorMessage(Session session, String message) {
+        ErrorMessage errorMessage = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, String.format("Error: %s", message));
+        try {
+            session.getRemote().sendString(new Gson().toJson(errorMessage));
+        } catch (IOException subEx) {
+            System.out.printf("Can't even bring myself to write the error message. Error: %s.%n", subEx.getMessage());
+        }
     }
 }

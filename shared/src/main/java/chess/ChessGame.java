@@ -120,7 +120,7 @@ public class ChessGame {
                     }
                     inCheck = isInCheck(piece.getTeamColor());
                 }
-                this.board = new ChessBoard(origBoard);
+                board = new ChessBoard(origBoard);
                 return !inCheck;
             }
         }

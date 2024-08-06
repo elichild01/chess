@@ -116,7 +116,7 @@ public class WSServer {
 //        Game is updated to represent the move in the database.
         try {
             if (gameData.game().getBoard().getPiece(command.getMove().getStartPosition()).getTeamColor() != thisPlayerColor) {
-                throw new InvalidMoveException("Can't move other player's piece.");
+                throw new InvalidMoveException("Move out of turn.");
             }
             gameData.game().makeMove(command.getMove());
             gameService.update(gameData);

@@ -7,7 +7,6 @@ import websocketclient.WSClient;
 import java.io.IOException;
 import java.util.*;
 
-import static websocketclient.WSClient.currGame;
 import static websocketclient.WSClient.drawBoard;
 
 public class Main {
@@ -24,6 +23,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         int port = 8081;
         httpServer = new ServerFacade(port);
+        wsClient = new WSClient();
 
         var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
         System.out.println("♕ 240 Chess Client: " + piece);
@@ -54,9 +54,10 @@ public class Main {
                     default -> handleUnrecognizedOption();
                 }
             }
-            if (state == AppState.IN_GAMEPLAY) {
-                drawBoard(currGame.game().getBoard(), currColor == ChessGame.TeamColor.BLACK);
-            }
+//            if (state == AppState.IN_GAMEPLAY) {
+//                drawBoard(wsClient.getCurrGame().game(), currColor == ChessGame.TeamColor.WHITE, highlightSquare);
+//                highlightSquare = null;
+//            }
         }
     }
 
@@ -196,24 +197,31 @@ public class Main {
             colorStr = scanner.nextLine();
         }
         ChessGame.TeamColor playerColor = colorStr.equalsIgnoreCase("WHITE") ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
-        currGame = currGameList.get(gameNum);
+
+        GameData selectedGame = currGameList.get(gameNum);
+        if (selectedGame == null) {
+            System.out.println("Selection invalid.");
+            handleHelp();
+            return;
+        }
 
         // join game
-        Map<String, Object> response = httpServer.join(authToken, playerColor, currGame.gameID());
+        Map<String, Object> response = httpServer.join(authToken, playerColor, selectedGame.gameID());
         if (!response.containsKey("message")) {
-            currColor = playerColor;
-            System.out.printf("Successfully joined game %s.%n", currGame.gameName());
-
             // open WebSocket connection
             try {
                 wsClient = new WSClient();
+                wsClient.setCurrGame(selectedGame);
             } catch (Exception ex) {
                 System.out.printf("Error: %s%n", ex.getMessage());
                 return;
             }
 
+            currColor = playerColor;
+            System.out.printf("Successfully joined game %s.%n", wsClient.getCurrGame().gameName());
+
             // send a CONNECT WebSocket message
-            wsClient.connect(authToken, currGame.gameID());
+            wsClient.connect(authToken, wsClient.getCurrGame().gameID(), currColor == ChessGame.TeamColor.WHITE);
 
             // transition to gameplay UI
             state = AppState.IN_GAMEPLAY;
@@ -226,46 +234,77 @@ public class Main {
     private static void handleObserve() {
         System.out.print("Enter number of the game you would like to observe (from most recently-displayed list): ");
         int gameNum = scanner.nextInt();
-        currGame = currGameList.get(gameNum);
         currColor = null;
 
-        // proceed to observe game
-        drawStartingBoards();
+//        // observe game
+        // FIXME FIXME FIXME not actually sure yet how to observe from client side
     }
 
-    private static void handleRedraw() {}
+    private static void handleRedraw() {
+        drawBoard(wsClient.getCurrGame().game(), currColor == ChessGame.TeamColor.WHITE, null);
+    }
 
     private static void handleLeave() {
         try {
-            wsClient.leave(authToken, currGame.gameID());
+            wsClient.leave(authToken, wsClient.getCurrGame().gameID());
         } catch (IOException err) {
-            System.out.printf("Could not leave game %s. %s%n", currGame.gameName(), err.getMessage());
+            System.out.printf("Could not leave game %s. %s%n", wsClient.getCurrGame().gameName(), err.getMessage());
             return;
         }
 
-        // Leave game
-        currGame = null;
-        currColor = null;
+        // leave game
         state = AppState.LOGGED_IN;
+        System.out.printf("Successfully left game %s.%n", wsClient.getCurrGame().gameName());
+        wsClient.setCurrGame(null);
+        currColor = null;
+        handleHelp();
     }
 
     private static void handleMove() {
-        // get info from user
+        // position moving from
         System.out.print("Please enter the square you would like to move FROM (letter and number, no space, e.g. A1): ");
         String fromSquare = scanner.nextLine();
+        ChessPosition fromPosition = parseSquareInfo(fromSquare);
+        if (fromPosition == null) {
+            System.out.println("Invalid square selection.");
+            handleHelp();
+            return;
+        }
+        ChessPiece pieceToMove = wsClient.getCurrGame().game().getBoard().getPiece(fromPosition);
+        if (pieceToMove == null) {
+            System.out.println("Cannot move piece from empty square.");
+            handleHelp();
+            return;
+        }
+        if (pieceToMove.getTeamColor() != currColor) {
+            System.out.println("You cannot move pieces that do not belong to you.");
+            handleHelp();
+            return;
+        }
+
+        // position moving to
         System.out.print("Please enter the square you would like to move TO (letter and number, no space, e.g. B3): ");
         String toSquare = scanner.nextLine();
-        System.out.print("If you are promoting a pawn, please enter the piece type you would like to promote to. Otherwise, enter 'NA'.: ");
-        String promotionPiece = scanner.nextLine();
-
-        ChessPosition fromPosition = parseSquareInfo(fromSquare);
         ChessPosition toPosition = parseSquareInfo(toSquare);
-        ChessPiece.PieceType promoPieceType = parsePawnPromoInfo(promotionPiece);
+        if (toPosition == null) {
+            System.out.println("Invalid square selection.");
+            handleHelp();
+            return;
+        }
 
+        // pawn promotion
+        ChessPiece.PieceType promoPieceType = null;
+        if (pieceToMove.getPieceType() == ChessPiece.PieceType.PAWN
+                && (toPosition.getRow() == 1 || toPosition.getRow() == 8)) {
+            System.out.print("Pawn promo attempt! Please enter the piece type you would like to promote to: ");
+            String promotionPiece = scanner.nextLine();
+            promoPieceType = parsePawnPromoInfo(promotionPiece);
+        }
+
+        // make the move
         ChessMove move = new ChessMove(fromPosition, toPosition, promoPieceType);
-
         try {
-            wsClient.makeMove(authToken, currGame.gameID(), move);
+            wsClient.makeMove(authToken, wsClient.getCurrGame().gameID(), move);
         } catch (IOException err) {
             System.out.printf("Could not make move %s. %s%n", move, err.getMessage());
         }
@@ -273,14 +312,31 @@ public class Main {
 
     private static void handleResign() {
         try {
-            wsClient.resign(authToken, currGame.gameID());
+            wsClient.resign(authToken, wsClient.getCurrGame().gameID());
         } catch (IOException err) {
-            System.out.printf("Could not leave game %s. %s%n", currGame.gameName(), err.getMessage());
+            System.out.printf("Could not resign from game %s. %s%n", wsClient.getCurrGame().gameName(), err.getMessage());
         }
     }
 
     private static void handleHighlight() {
+        // get info from user
+        System.out.print("Please enter the square of the piece whose moves you'd like to highlight (letter and number, no space, e.g. A1): ");
+        String fromSquare = scanner.nextLine();
 
+        // highlight the square, checking for errors
+        ChessPosition highlightSquare = parseSquareInfo(fromSquare);
+        if (highlightSquare == null) {
+            System.out.println("Invalid square selection.");
+            return;
+        }
+        ChessPiece highlightedPiece = wsClient.getCurrGame().game().getBoard().getPiece(highlightSquare);
+        if (highlightedPiece == null
+                || highlightedPiece.getTeamColor() != wsClient.getCurrGame().game().getTeamTurn()) {
+            System.out.println("Selected square does not contain a piece of the side whose turn it is.");
+            highlightSquare = null;
+        }
+
+        drawBoard(wsClient.getCurrGame().game(), currColor == ChessGame.TeamColor.WHITE, highlightSquare);
     }
 
 
@@ -300,17 +356,6 @@ public class Main {
             case LOGGED_IN -> new String[]{"help", "logout", "create", "list", "play", "observe"};
             case IN_GAMEPLAY -> new String[]{"help", "redraw", "leave", "move", "resign", "highlight"};
         };
-    }
-
-    private static void drawStartingBoards() {
-        ChessBoard board = new ChessBoard();
-        board.resetBoard();
-        drawBoards(board);
-    }
-
-    private static void drawBoards(ChessBoard board) {
-        drawBoard(board, false);
-        drawBoard(board, true);
     }
 
     private static ChessPosition parseSquareInfo(String squareInfo) {

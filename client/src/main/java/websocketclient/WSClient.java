@@ -13,32 +13,37 @@ import websocket.messages.ServerMessage;
 import javax.websocket.*;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import static ui.EscapeSequences.*;
 
 
 public class WSClient extends Endpoint {
     private final Session session;
-    public static GameData currGame;
+    private GameData currGame;
+    private boolean flipBoard;
 
     public WSClient() throws Exception {
         URI uri = new URI("ws://localhost:8081/ws");
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
         this.session = container.connectToServer(this, uri);
+        this.session.addMessageHandler(new MessageHandler.Whole<String>() {
+            @Override
+            public void onMessage(String message) {
+                ServerMessage serverMessage;
+                try {
+                    serverMessage = new Gson().fromJson(message, ServerMessage.class);
+                } catch (Exception ex) {
+                    System.out.printf("Error in onMessage: %s%n", ex.getMessage());
+                    return;
+                }
 
-        this.session.addMessageHandler((MessageHandler.Whole<String>) message -> {
-            ServerMessage serverMessage;
-            try {
-                serverMessage = new Gson().fromJson(message, ServerMessage.class);
-            } catch (Exception ex) {
-                System.out.printf("Error in onMessage: %s%n", ex.getMessage());
-                return;
-            }
-
-            switch (serverMessage.getServerMessageType()) {
-                case NOTIFICATION -> handleNotification(message);
-                case LOAD_GAME -> handleLoadGame(message);
-                case ERROR -> handleError(message);
+                switch (serverMessage.getServerMessageType()) {
+                    case NOTIFICATION -> handleNotification(message);
+                    case LOAD_GAME -> handleLoadGame(message);
+                    case ERROR -> handleError(message);
+                }
             }
         });
     }
@@ -46,7 +51,8 @@ public class WSClient extends Endpoint {
     public void onOpen(Session session, EndpointConfig endpointConfig) {
     }
 
-    public void connect(String authToken, int gameID) throws IOException {
+    public void connect(String authToken, int gameID, boolean flipBoard) throws IOException {
+        this.flipBoard = flipBoard;
         send(UserGameCommand.CommandType.CONNECT, authToken, gameID, null);
     }
 
@@ -81,7 +87,7 @@ public class WSClient extends Endpoint {
     private void handleLoadGame(String message) {
         LoadGameMessage loadGameMessage = new Gson().fromJson(message, LoadGameMessage.class);
         currGame = loadGameMessage.getGame();
-        System.out.printf("Loaded game %s%n.", currGame.gameName());
+        drawBoard(currGame.game(), flipBoard, null);
     }
 
     private void handleError(String message) {
@@ -89,7 +95,15 @@ public class WSClient extends Endpoint {
         System.out.printf("Error: %s%n", errorMessage.getErrorMessage());
     }
 
-    public static void drawBoard(ChessBoard board, boolean flip) {
+    public GameData getCurrGame() {
+        return currGame;
+    }
+
+    public void setCurrGame(GameData currGame) {
+        this.currGame = currGame;
+    }
+
+    public static void drawBoard(ChessGame game, boolean flip, ChessPosition highlightPosition) {
         String borderBackgroundColor = SET_BG_COLOR_YELLOW;
         String borderTextColor = SET_TEXT_COLOR_BLACK + SET_TEXT_BOLD;
 
@@ -107,6 +121,16 @@ public class WSClient extends Endpoint {
             direction = -1;
         }
 
+        // prepare for highlighting
+        Collection<ChessPosition> squaresToHighlight = new ArrayList<>();
+        if (highlightPosition != null) {
+            Collection<ChessMove> validMoves = game.validMoves(highlightPosition);
+            for (ChessMove move : validMoves) {
+                squaresToHighlight.add(move.getEndPosition());
+            }
+        }
+        System.out.println(squaresToHighlight);
+
         // top border
         printSquare(borderBackgroundColor, "", EMPTY);
         for (char colChar = firstCol; colChar != lastCol-direction; colChar -= (char) direction) {
@@ -120,7 +144,11 @@ public class WSClient extends Endpoint {
             printSquare(borderBackgroundColor, borderTextColor, String.format(" %d ", row));
             for (int col = firstRow; col != lastRow+direction; col += direction) {
                 String squareColor = (row + col & 1) == 0 ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_BLACK;
-                ChessPiece piece = board.getPiece(new ChessPosition(row, 9-col));
+                ChessPosition currentSquare = new ChessPosition(row, 9-col);
+                if (squaresToHighlight.contains(currentSquare)) {
+                    squareColor = (row + col & 1) == 0 ? SET_BG_COLOR_GREEN : SET_BG_COLOR_DARK_GREEN;
+                }
+                ChessPiece piece = game.getBoard().getPiece(new ChessPosition(row, 9-col));
                 String pieceColor = "";
                 String pieceString = EMPTY;
                 if (piece != null) {
@@ -139,7 +167,7 @@ public class WSClient extends Endpoint {
             printSquare(borderBackgroundColor, borderTextColor, String.format(" %s ", colChar));
         }
         printSquare(borderBackgroundColor, "", EMPTY);
-        System.out.printf("%s%s%s\n\n", RESET_BG_COLOR, RESET_TEXT_COLOR, RESET_TEXT_BOLD_FAINT);
+        System.out.printf("%s%s%s\n", RESET_BG_COLOR, RESET_TEXT_COLOR, RESET_TEXT_BOLD_FAINT);
     }
 
     private static void printSquare(String backgroundColor, String textColor, String character) {

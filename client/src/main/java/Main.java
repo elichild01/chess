@@ -54,10 +54,6 @@ public class Main {
                     default -> handleUnrecognizedOption();
                 }
             }
-//            if (state == AppState.IN_GAMEPLAY) {
-//                drawBoard(wsClient.getCurrGame().game(), currColor == ChessGame.TeamColor.WHITE, highlightSquare);
-//                highlightSquare = null;
-//            }
         }
     }
 
@@ -275,7 +271,7 @@ public class Main {
     }
 
     private static void handleRedraw() {
-        drawBoard(wsClient.getCurrGame().game(), currColor == ChessGame.TeamColor.WHITE, null);
+        drawBoard(wsClient.getCurrGame().game(), currColor != ChessGame.TeamColor.BLACK, null);
     }
 
     private static void handleLeave() {
@@ -370,7 +366,7 @@ public class Main {
             highlightSquare = null;
         }
 
-        drawBoard(wsClient.getCurrGame().game(), currColor == ChessGame.TeamColor.WHITE, highlightSquare);
+        drawBoard(wsClient.getCurrGame().game(), currColor != ChessGame.TeamColor.BLACK, highlightSquare);
     }
 
 

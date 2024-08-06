@@ -129,7 +129,6 @@ public class WSClient extends Endpoint {
                 squaresToHighlight.add(move.getEndPosition());
             }
         }
-        System.out.println(squaresToHighlight);
 
         // top border
         printSquare(borderBackgroundColor, "", EMPTY);
@@ -167,7 +166,7 @@ public class WSClient extends Endpoint {
             printSquare(borderBackgroundColor, borderTextColor, String.format(" %s ", colChar));
         }
         printSquare(borderBackgroundColor, "", EMPTY);
-        System.out.printf("%s%s%s\n", RESET_BG_COLOR, RESET_TEXT_COLOR, RESET_TEXT_BOLD_FAINT);
+        System.out.printf("%s%s%s\n\n", RESET_BG_COLOR, RESET_TEXT_COLOR, RESET_TEXT_BOLD_FAINT);
     }
 
     private static void printSquare(String backgroundColor, String textColor, String character) {

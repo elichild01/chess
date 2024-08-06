@@ -76,9 +76,9 @@ public class WSServer {
 
     private static NotificationMessage getConnectionDescriptionMessage(GameData game, String username) {
         String gameRole;
-        if (game.whiteUsername().equals(username)) {
+        if (game.whiteUsername() != null && game.whiteUsername().equals(username)) {
             gameRole = "playing white.";
-        } else if (game.blackUsername().equals(username)) {
+        } else if (game.blackUsername() != null && game.blackUsername().equals(username)) {
             gameRole = "playing black.";
         } else {
             gameRole = "as an observer.";
